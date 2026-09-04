@@ -159,6 +159,7 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 function isoFromBR(v){if(!v)return''; if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v; const m=String(v).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''}
 function brDate(v){if(!v)return'—';const iso=isoFromBR(v)||v;const [y,m,d]=iso.slice(0,10).split('-');return d&&m&&y?`${d}/${m}/${y}`:v}
 function uniq(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}))}
+function allCollectors(){return uniq([...state.samples.map(x=>x.coletadoPor),...(state.extraCollectors||[]),...Object.keys(state.leaders||{})]);}
 function countBy(arr,keyFn){const m={};arr.forEach(x=>{const k=keyFn(x)||'Não informado';m[k]=(m[k]||0)+1});return m}
 function stageAtLeast(s,stage){return STAGES.indexOf(s)>=STAGES.indexOf(stage)}
 function badge(status){let c='gray';if(['COLETADA','AGUARDANDO_FRETE','FRETE_CONTRATADO'].includes(status))c='yellow';if(status==='EM_TRANSITO')c='blue';if(['CHEGOU_SAO_PEDRO','RECEBIDA','EM_ENSAIO','ENSAIADA'].includes(status))c='green';return `<span class="badge ${c}"><span class="status-dot"></span>${stageLabels[status]||status||'—'}</span>`}
