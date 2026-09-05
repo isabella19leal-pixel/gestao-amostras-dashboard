@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gestão de Amostras — Sond V7</title>
+<title>Gestão de Amostras — Sond V8</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--yellow:#f6c400;--yellow2:#ffd83d;--black:#111214;--black2:#1b1d20;--ink:#1f2328;--muted:#70757d;--bg:#f4f5f7;--card:#fff;--line:#e5e7eb;--danger:#c62828;--warn:#a66900;--success:#16794b;--info:#315aa8;--shadow:0 7px 28px rgba(17,18,20,.07);--radius:16px}
@@ -40,7 +40,7 @@
     <button data-section="pendencias">⚠ Pendências</button>
     <button data-section="importar">⇧ Importar Dados</button>
   </nav>
-  <div class="side-note"><b>Versão local V7</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
+  <div class="side-note"><b>Versão local V8</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
 </aside>
 <main class="main">
 <header class="topbar">
@@ -139,6 +139,7 @@
 <section class="section" id="section-recebidos">
   <div class="section-head"><div><h3>Recebidos na Sond</h3><p>Esta página é alimentada exclusivamente pelo Excel de amostras recebidas da plataforma Sond.</p></div></div>
   <div class="kpis" id="receivedKpis"></div>
+  <div class="notice" style="margin-bottom:14px"><b>Como é calculado “Faltam receber na Sond”:</b> total de amostras do Excel de <b>Coletas</b> no filtro atual − Códigos de Amostra encontrados no Excel de <b>Recebidas da Sond</b>. A baixa manual de São Pedro <b>não entra</b> nesta conta.</div>
   <div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>Código</th><th>OS</th><th>ST</th><th>Cliente</th><th>Recebida na Sond</th><th>Tag</th><th>Usuário</th><th>Encontrada nas coletas?</th><th></th></tr></thead><tbody id="receivedRows"></tbody></table></div></div>
 </section>
 <section class="section" id="section-ensaiados"><div class="section-head"><div><h3>Ensaiados</h3><p>Progresso por OS com base nos status registrados.</p></div></div><div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>OS</th><th>Cliente</th><th>Coletadas</th><th>Recebidas</th><th>Ensaiadas</th><th>Pendentes</th><th>% concluído</th></tr></thead><tbody id="assayedRows"></tbody></table></div></div></section>
@@ -173,7 +174,6 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 function isoFromBR(v){if(!v)return''; if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v; const m=String(v).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''}
 function brDate(v){if(!v)return'—';const iso=isoFromBR(v)||v;const [y,m,d]=iso.slice(0,10).split('-');return d&&m&&y?`${d}/${m}/${y}`:v}
 function uniq(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}))}
-function allCollectors(){return uniq([...state.samples.map(x=>x.coletadoPor),...(state.extraCollectors||[]),...Object.keys(state.leaders||{})]);}
 function countBy(arr,keyFn){const m={};arr.forEach(x=>{const k=keyFn(x)||'Não informado';m[k]=(m[k]||0)+1});return m}
 function stageAtLeast(s,stage){return STAGES.indexOf(s)>=STAGES.indexOf(stage)}
 function badge(status){let c='gray';if(['COLETADA','AGUARDANDO_FRETE','FRETE_CONTRATADO'].includes(status))c='yellow';if(status==='EM_TRANSITO')c='blue';if(['CHEGOU_SAO_PEDRO','RECEBIDA','EM_ENSAIO','ENSAIADA'].includes(status))c='green';return `<span class="badge ${c}"><span class="status-dot"></span>${stageLabels[status]||status||'—'}</span>`}
@@ -229,11 +229,27 @@ function renderStageTables(){
   document.getElementById('spKpis').innerHTML=[['São Pedro — manual',total,'quantidade física registrada','yellow'],['Lançamentos',entries.length,'baixas manuais',''],['OS recebidas',osCount,'OS distintas',''],['Última chegada',entries[0]?.data?brDate(entries[0].data):'—','data mais recente','']].map(v=>`<div class="kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
   document.getElementById('spRows').innerHTML=entries.length?entries.map(e=>`<tr><td>${brDate(e.data)}</td><td><b>${esc(e.os||'—')}</b></td><td>${esc(e.contrato||'—')}</td><td>${esc(e.base||'—')}</td><td><b>${Number(e.quantidade)||0}</b></td><td>${esc(e.observacao||'—')}</td><td><button class="link-btn" onclick="removeSaoPedroEntry('${escAttr(e.id)}')">Excluir</button></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhuma baixa manual registrada em São Pedro.</td></tr>';
 
-  const filters={search:(document.getElementById('fSearch')?.value||'').trim().toLowerCase(),client:document.getElementById('fClient')?.value||'',collector:document.getElementById('fCollector')?.value||'',leader:document.getElementById('fLeader')?.value||'',os:document.getElementById('fOS')?.value||'',st:document.getElementById('fST')?.value||'',contract:document.getElementById('fContract')?.value||'',base:document.getElementById('fBase')?.value||'',recv:document.getElementById('fReceivedSond')?.value||''};
-  let received=receivedRegistryRows().filter(r=>{const text=[r.codigo,r.os,r.identificacao,r.cliente,r.coletadoPor,r.lider,r.contrato,r.baseLogistica,r.tag,r.usuario].join(' ').toLowerCase();if(filters.search&&!text.includes(filters.search))return false;if(filters.client&&r.cliente!==filters.client)return false;if(filters.collector&&r.coletadoPor!==filters.collector)return false;if(filters.leader&&r.lider!==filters.leader)return false;if(filters.os&&r.os!==filters.os)return false;if(filters.st&&r.identificacao!==filters.st)return false;if(filters.contract&&r.contrato!==filters.contract)return false;if(filters.base&&r.baseLogistica!==filters.base)return false;if(filters.recv==='NAO')return false;return true;});
+  const filters={search:(document.getElementById('fSearch')?.value||'').trim().toLowerCase(),date:document.getElementById('fDate')?.value||'',client:document.getElementById('fClient')?.value||'',collector:document.getElementById('fCollector')?.value||'',leader:document.getElementById('fLeader')?.value||'',os:document.getElementById('fOS')?.value||'',st:document.getElementById('fST')?.value||'',contract:document.getElementById('fContract')?.value||'',base:document.getElementById('fBase')?.value||'',status:document.getElementById('fStatus')?.value||'',recv:document.getElementById('fReceivedSond')?.value||''};
+  let received=receivedRegistryRows().filter(r=>{const text=[r.codigo,r.os,r.identificacao,r.cliente,r.coletadoPor,r.lider,r.contrato,r.baseLogistica,r.tag,r.usuario].join(' ').toLowerCase();if(filters.search&&!text.includes(filters.search))return false;if(filters.date&&(!r._sample||isoFromBR(r._sample.dataColeta)!==filters.date))return false;if(filters.client&&r.cliente!==filters.client)return false;if(filters.collector&&r.coletadoPor!==filters.collector)return false;if(filters.leader&&r.lider!==filters.leader)return false;if(filters.os&&r.os!==filters.os)return false;if(filters.st&&r.identificacao!==filters.st)return false;if(filters.contract&&r.contrato!==filters.contract)return false;if(filters.base&&r.baseLogistica!==filters.base)return false;if(filters.status&&(!r._sample||r._sample.statusLogistico!==filters.status))return false;if(filters.recv==='NAO')return false;return true;});
   received.sort((a,b)=>(b.primeiraFoto||b.ultimaFoto||'').localeCompare(a.primeiraFoto||a.ultimaFoto||''));
   const matched=received.filter(r=>r._sample).length,missing=received.length-matched;
-  document.getElementById('receivedKpis').innerHTML=[['Recebidas Sond',received.length,'somente registros do Excel','yellow'],['Encontradas nas coletas',matched,'cruzadas pelo Código Amostra',''],['Fora do histórico',missing,'estão no Excel, mas não na base de coletas',missing?'alert':''],['OS',new Set(received.map(r=>r.os).filter(Boolean)).size,'OS distintas','']].map(v=>`<div class="kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
+
+  // A pendência de recebimento é calculada SOMENTE entre Coletas Sond x Recebidas Sond.
+  // Não usa a baixa manual de São Pedro.
+  const collectedScope=filterSamples('fReceivedSond');
+  const receivedCodes=new Set(Object.keys(state.receivedRegistry||{}).map(normCode));
+  const receivedInScope=collectedScope.filter(s=>receivedCodes.has(normCode(s.codigo))).length;
+  const pendingSamples=collectedScope.filter(s=>!receivedCodes.has(normCode(s.codigo)));
+  const pendingCount=pendingSamples.length;
+  const pendingOS=new Set(pendingSamples.map(s=>s.os).filter(Boolean)).size;
+
+  document.getElementById('receivedKpis').innerHTML=[
+    ['Coletadas no recorte',collectedScope.length,'base: Excel de coletas',''],
+    ['Recebidas Sond',receivedInScope,'confirmadas no Excel de recebidas','yellow'],
+    ['Faltam receber na Sond',pendingCount,'coletadas que ainda não constam como recebidas',pendingCount?'alert':''],
+    ['Fora do histórico',missing,'recebidas no Excel sem coleta carregada',missing?'alert':''],
+    ['OS com pendência',pendingOS,'OS que ainda possuem amostras a receber','']
+  ].map(v=>`<div class="kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
   document.getElementById('receivedRows').innerHTML=received.length?received.map(r=>{const found=!!r._sample;const dt=r.primeiraFoto||r.ultimaFoto||'—';return `<tr><td><b>${esc(r.codigo)}</b></td><td>${esc(r.os||'—')}</td><td>${esc(r.identificacao||'—')}</td><td>${esc(r.cliente||'—')}</td><td>${esc(dt)}</td><td>${esc(r.tag||'—')}</td><td>${esc(r.usuario||'—')}</td><td>${found?'<span class="badge green">Sim</span>':'<span class="badge orange">Não</span>'}</td><td>${found?`<button class="link-btn" onclick="openSample('${escAttr(r.codigo)}')">Detalhes</button>`:'—'}</td></tr>`}).join(''):'<tr><td colspan="9" class="empty">Nenhuma amostra recebida importada. Use “Importar Excel → Recebidas Sond”.</td></tr>';
 }
 function saveSaoPedroEntry(){const data=document.getElementById('spDate').value,os=document.getElementById('spOS').value,quantidade=parseInt(document.getElementById('spQty').value,10),contrato=document.getElementById('spContract').value.trim(),base=document.getElementById('spBase').value.trim(),observacao=document.getElementById('spObs').value.trim();if(!data)return alert('Informe a data de chegada.');if(!os)return alert('Selecione a OS.');if(!quantidade||quantidade<1)return alert('Informe uma quantidade maior que zero.');state.saoPedroEntradas.push({id:'SP-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),data,os,contrato,base,quantidade,observacao,createdAt:new Date().toISOString()});if(save()){document.getElementById('spQty').value='';document.getElementById('spObs').value='';toast(`${quantidade} amostras registradas em São Pedro`);}}
