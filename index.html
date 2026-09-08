@@ -59,7 +59,7 @@ html[data-theme="dark"] .base-card.warning{background:#292514}html[data-theme="d
     <button data-section="pendencias">⚠ Pendências</button>
     <button data-section="importar">⇧ Importar Dados</button>
   </nav>
-  <div class="side-note"><b>Versão local V10</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
+  <div class="side-note"><b>Versão local V10.1</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
 </aside>
 <main class="main">
 <header class="topbar">
@@ -219,11 +219,12 @@ let state=normalizeState(loadState()); let previewData=null, previewFilename='',
 let chartDailyTeamsInst=null, chartTeamRankingInst=null, chartBasesInst=null; const THEME_KEY='sond_gestao_theme';
 function normalizeState(s){s=s||{};s.samples=(s.samples||[]).filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra'&&normalizeKey(x.os)!=='ordemdeservicoos');s.mappings=s.mappings||{};s.leaders=s.leaders||{};s.extraCollectors=s.extraCollectors||[];s.freights=s.freights||[];s.imports=s.imports||[];s.receivedRegistry=s.receivedRegistry||{};s.saoPedroEntradas=s.saoPedroEntradas||[];s.samples.forEach(x=>{if(x.recebidaSond===undefined)x.recebidaSond=false;if(!x.statusLogistico)x.statusLogistico='COLETADA';});s.lastUpdate=s.lastUpdate||new Date().toISOString();return s;}
 function loadState(){const saved=localStorage.getItem(KEY); if(saved){try{return JSON.parse(saved)}catch(e){}} const cleanSeed=SEED.filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra');return {samples:cleanSeed,mappings:{},leaders:{},extraCollectors:[],freights:[],receivedRegistry:{},saoPedroEntradas:[],imports:[{file:'Amostras coletadas dia 02-09.xlsx',date:new Date().toISOString(),total:cleanSeed.length,newCount:cleanSeed.length,updated:0,type:'COLETAS'}],lastUpdate:new Date().toISOString()};}
-function save(){state.lastUpdate=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(state));renderAll();return true;}catch(err){console.error(err);alert('Não foi possível salvar no navegador. Gere um Backup e verifique o espaço de armazenamento do site. Detalhe: '+err.message);return false;}}
+function save(){state.lastUpdate=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(state));}catch(err){console.error('Erro ao gravar no localStorage:',err);alert('Não foi possível salvar no navegador. Gere um Backup e verifique o espaço de armazenamento do site. Detalhe: '+err.message);return false;}try{renderAll();}catch(err){console.error('Os dados foram salvos, mas houve erro ao atualizar a tela:',err);alert('Os dados foram salvos, mas houve um erro ao atualizar a tela. Atualize a página (Ctrl + F5). Detalhe: '+err.message);}return true;}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 function isoFromBR(v){if(!v)return''; if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v; const m=String(v).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''}
 function brDate(v){if(!v)return'—';const iso=isoFromBR(v)||v;const [y,m,d]=iso.slice(0,10).split('-');return d&&m&&y?`${d}/${m}/${y}`:v}
 function uniq(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}))}
+function allCollectors(){const names=[...state.samples.map(x=>String(x.coletadoPor||'').trim()),...(state.extraCollectors||[]).map(x=>String(x||'').trim()),...Object.keys(state.leaders||{}).map(x=>String(x||'').trim())];const byKey=new Map();names.forEach(name=>{if(!name)return;const key=normText(name);if(!byKey.has(key))byKey.set(key,name);});return [...byKey.values()].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true,sensitivity:'base'}));}
 function countBy(arr,keyFn){const m={};arr.forEach(x=>{const k=keyFn(x)||'Não informado';m[k]=(m[k]||0)+1});return m}
 function stageAtLeast(s,stage){return STAGES.indexOf(s)>=STAGES.indexOf(stage)}
 function badge(status){let c='gray';if(['COLETADA','AGUARDANDO_FRETE','FRETE_CONTRATADO'].includes(status))c='yellow';if(status==='EM_TRANSITO')c='blue';if(['CHEGOU_SAO_PEDRO','RECEBIDA','EM_ENSAIO','ENSAIADA'].includes(status))c='green';return `<span class="badge ${c}"><span class="status-dot"></span>${stageLabels[status]||status||'—'}</span>`}
