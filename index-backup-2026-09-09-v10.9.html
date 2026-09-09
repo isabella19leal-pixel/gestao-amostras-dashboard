@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gestão de Amostras — Sond V10.10</title>
+<title>Gestão de Amostras — Sond V10.9</title>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('sond_gestao_theme')||'light'}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
@@ -95,7 +95,7 @@ html[data-theme="dark"] .editing-banner{background:#332d11;color:#ffe78b;border-
     <button data-section="pendencias">⚠ Pendências</button>
     <button data-section="importar">⇧ Importar Dados</button>
   </nav>
-  <div class="side-note"><b>Versão local V10.10</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
+  <div class="side-note"><b>Versão local V10.9</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
 </aside>
 <main class="main">
 <header class="topbar">
@@ -222,7 +222,7 @@ html[data-theme="dark"] .editing-banner{background:#332d11;color:#ffe78b;border-
   <div class="panel"><h4>Vinculação operacional</h4><div class="panel-sub">Cadastre ou ajuste OS → Cliente → Base. O cliente é identificado automaticamente pelas amostras da Sond e a base é reaproveitada nas próximas importações.</div><div class="form-grid"><div class="field"><label>OS</label><select id="mapOS"></select></div><div class="field"><label>Cliente</label><input id="mapClient" class="readonly-like" readonly placeholder="Gerado automaticamente pela Sond" /></div><div class="field"><label>Base</label><input id="mapBase" placeholder="Ex.: Sorocaba" list="basesList" /></div><div class="form-actions"><button class="btn primary" id="saveMapping">Salvar vínculo</button></div></div><datalist id="basesList"></datalist><div style="height:14px"></div><div class="table-wrap"><table class="table"><thead><tr><th>OS</th><th>Cliente</th><th>Base</th><th>Amostras</th><th></th></tr></thead><tbody id="mappingRows"></tbody></table></div></div>
 </section>
 <section class="section" id="section-fretes">
-  <div class="section-head"><div><h3>Fretes / Caminhões</h3><p>Cadastre e edite as OS e os Contratos/SUP que estão vindo em cada caminhão.</p></div></div>
+  <div class="section-head"><div><h3>Fretes / Caminhões</h3><p>Cadastre, edite e acompanhe os fretes e as OS transportadas.</p></div></div>
   <div class="panel" style="margin-bottom:14px">
     <div id="freightEditingBanner" class="editing-banner">✏️ Editando frete existente. Altere os dados abaixo e clique em “Salvar alterações”.</div>
     <div class="form-grid">
@@ -231,7 +231,6 @@ html[data-theme="dark"] .editing-banner{background:#332d11;color:#ffe78b;border-
       <div class="field"><label>Previsão chegada</label><input id="frEta" type="date" /></div>
       <div class="field"><label>Status</label><select id="frStatus"><option>CONTRATADO</option><option>AGUARDANDO_COLETA</option><option>EM_TRANSITO</option><option>CHEGOU_SAO_PEDRO</option><option>FINALIZADO</option><option>ATRASADO</option></select></div>
       <div class="field" style="grid-column:span 2"><label>OS no caminhão</label><input id="frOS" placeholder="17902-26, 17207-26" /></div>
-      <div class="field" style="grid-column:span 2"><label>Contratos / SUP no caminhão</label><input id="frContracts" placeholder="SUP-0000-00, SUP-1111-26" /></div>
       <div class="field"><label>Transportadora / motorista</label><input id="frCarrier" placeholder="Opcional" /></div>
       <div class="form-actions" style="display:flex;gap:8px;align-items:end">
         <button class="btn primary" id="saveFreight">Cadastrar frete</button>
@@ -315,7 +314,7 @@ const STAGES=['COLETADA','NA_BASE','AGUARDANDO_FRETE','FRETE_CONTRATADO','EM_TRA
 const stageLabels={COLETADA:'Coletada',NA_BASE:'Na base',AGUARDANDO_FRETE:'Aguard. frete',FRETE_CONTRATADO:'Frete contratado',EM_TRANSITO:'Em trânsito',CHEGOU_SAO_PEDRO:'São Pedro',RECEBIDA:'Recebida',EM_ENSAIO:'Em ensaio',ENSAIADA:'Ensaiada'};
 let state=normalizeState(loadState()); let previewData=null, previewFilename='', receivedPreviewData=null, receivedPreviewFilename='', receivedPreviewDuplicates=[];
 let chartDailyTeamsInst=null, chartTeamRankingInst=null, chartBasesInst=null; const THEME_KEY='sond_gestao_theme';
-function normalizeState(s){s=s||{};s.samples=(s.samples||[]).filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra'&&normalizeKey(x.os)!=='ordemdeservicoos');s.mappings=s.mappings||{};s.leaders=s.leaders||{};s.extraCollectors=s.extraCollectors||[];s.freights=s.freights||[];s.freights.forEach(f=>{if(!Array.isArray(f.os))f.os=String(f.os||'').split(',').map(x=>x.trim()).filter(Boolean);if(!Array.isArray(f.contratos))f.contratos=String(f.contratos||'').split(',').map(x=>x.trim()).filter(Boolean);});s.imports=s.imports||[];s.receivedRegistry=s.receivedRegistry||{};s.saoPedroEntradas=s.saoPedroEntradas||[];s.conventionalPlans=s.conventionalPlans||{};s.conventionalContractPlans=s.conventionalContractPlans||{};s.samples.forEach(x=>{if(x.recebidaSond===undefined)x.recebidaSond=false;if(!x.statusLogistico)x.statusLogistico='COLETADA';});s.lastUpdate=s.lastUpdate||new Date().toISOString();return s;}
+function normalizeState(s){s=s||{};s.samples=(s.samples||[]).filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra'&&normalizeKey(x.os)!=='ordemdeservicoos');s.mappings=s.mappings||{};s.leaders=s.leaders||{};s.extraCollectors=s.extraCollectors||[];s.freights=s.freights||[];s.imports=s.imports||[];s.receivedRegistry=s.receivedRegistry||{};s.saoPedroEntradas=s.saoPedroEntradas||[];s.conventionalPlans=s.conventionalPlans||{};s.conventionalContractPlans=s.conventionalContractPlans||{};s.samples.forEach(x=>{if(x.recebidaSond===undefined)x.recebidaSond=false;if(!x.statusLogistico)x.statusLogistico='COLETADA';});s.lastUpdate=s.lastUpdate||new Date().toISOString();return s;}
 function loadState(){const saved=localStorage.getItem(KEY); if(saved){try{return JSON.parse(saved)}catch(e){}} const cleanSeed=SEED.filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra');return {samples:cleanSeed,mappings:{},leaders:{},extraCollectors:[],freights:[],receivedRegistry:{},saoPedroEntradas:[],conventionalPlans:{},conventionalContractPlans:{},imports:[{file:'Amostras coletadas dia 02-09.xlsx',date:new Date().toISOString(),total:cleanSeed.length,newCount:cleanSeed.length,updated:0,type:'COLETAS'}],lastUpdate:new Date().toISOString()};}
 function save(){state.lastUpdate=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(state));}catch(err){console.error('Erro ao gravar no localStorage:',err);alert('Não foi possível salvar no navegador. Gere um Backup e verifique o espaço de armazenamento do site. Detalhe: '+err.message);return false;}try{renderAll();}catch(err){console.error('Os dados foram salvos, mas houve erro ao atualizar a tela:',err);alert('Os dados foram salvos, mas houve um erro ao atualizar a tela. Atualize a página (Ctrl + F5). Detalhe: '+err.message);}return true;}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
@@ -561,7 +560,7 @@ function freightStatusForSample(status,hasBase){
 }
 function resetFreightForm(){
   editingFreightCode=null;
-  ['frCode','frBase','frEta','frOS','frContracts','frCarrier'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  ['frCode','frBase','frEta','frOS','frCarrier'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   const st=document.getElementById('frStatus');if(st)st.value='CONTRATADO';
   const btn=document.getElementById('saveFreight');if(btn)btn.textContent='Cadastrar frete';
   const cancel=document.getElementById('cancelFreightEdit');if(cancel)cancel.style.display='none';
@@ -575,7 +574,6 @@ function editFreight(code){
   document.getElementById('frEta').value=f.eta||'';
   document.getElementById('frStatus').value=f.status||'CONTRATADO';
   document.getElementById('frOS').value=(f.os||[]).join(', ');
-  document.getElementById('frContracts').value=(f.contratos||[]).join(', ');
   document.getElementById('frCarrier').value=f.carrier||'';
   document.getElementById('saveFreight').textContent='Salvar alterações';
   document.getElementById('cancelFreightEdit').style.display='';
@@ -596,10 +594,8 @@ function renderFreights(){
       <div class="big" style="margin-top:10px">${n}</div>
       <div class="muted">amostras vinculadas</div>
       <div class="mini"><span>${esc(f.base||'Sem origem')}</span><span>ETA ${f.eta?brDate(f.eta):'—'}</span></div>
-      <div class="mini"><span>${(f.os||[]).length} OS</span><span>${(f.contratos||[]).length} contratos</span></div>
-      <div class="muted" style="margin-top:8px;font-size:11px"><b>OS:</b> ${esc((f.os||[]).join(', ')||'—')}</div>
-      <div class="muted" style="margin-top:5px;font-size:11px"><b>Contratos/SUP:</b> ${esc((f.contratos||[]).join(', ')||'—')}</div>
-      <div class="muted" style="margin-top:5px;font-size:11px"><b>Transporte:</b> ${esc(f.carrier||'Não informado')}</div>
+      <div class="mini"><span>${(f.os||[]).length} OS</span><span>${esc(f.carrier||'Sem transportadora')}</span></div>
+      <div class="muted" style="margin-top:8px;font-size:11px">OS: ${esc((f.os||[]).join(', ')||'—')}</div>
       <div style="display:flex;gap:12px;margin-top:12px">
         <button class="link-btn" onclick="editFreight('${escAttr(f.code)}')">✏️ Editar</button>
         <button class="link-btn" onclick="removeFreight('${escAttr(f.code)}')">Excluir</button>
@@ -858,16 +854,7 @@ function confirmReceivedImport(){
   if(newlyComplete.length===1)toast(`✅ ${newlyComplete[0].label}: contrato completo na sede`);else if(newlyComplete.length>1)toast(`✅ ${newlyComplete.length} contratos ficaram completos na sede`);else toast(`Recebidas Sond: ${matched} cruzadas • ${newlyApplied} novas confirmações • ${missing} guardadas para cruzamento futuro`);go('recebidos');
 }
 
-function exportExcel(){const rows=state.samples.map(enriched);const wb=XLSX.utils.book_new();const sampleRows=rows.map(s=>({'Código Amostra':s.codigo,'OS':s.os,'ST':s.identificacao,'Cliente':s.cliente,'Sondador':s.coletadoPor,'Líder':s.lider||'','Data Coleta':s.dataColeta,'Contrato/SUP':s.contrato||'','Base Logística':s.baseLogistica||'','Status Logístico':stageLabels[s.statusLogistico]||s.statusLogistico,'Frete':s.freteCodigo||'','Baixa São Pedro':s.dataChegada||'','Recebida Sond':s.recebidaSond?'Sim':'Não','Data Recebida Sond':s.dataRecebimentoSond||'','Tag Sond':s.tagSond||'','Usuário Recebimento Sond':s.usuarioRecebimentoSond||''}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(sampleRows),'Amostras');const leaders=allCollectors().map(c=>({Sondador:c,Líder:state.leaders[c]||''}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(leaders),'Sondadores_Lideres');const maps=Object.entries(state.mappings||{}).map(([os,m])=>({OS:os,'Cliente':state.samples.find(x=>x.os===os)?.cliente||'',Base:m.base||'','Contrato/SUP (legado)':m.contrato||''}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(maps),'Bases_OS');const clientes=[];Object.entries(state.samples.reduce((acc,s)=>{const c=s.cliente||'SEM CLIENTE';(acc[c]||(acc[c]=[])).push(s);return acc},{})).forEach(([cliente,rows])=>{Object.entries(rows.reduce((a,s)=>{(a[s.os]||(a[s.os]=[])).push(s);return a},{})).forEach(([os,r])=>clientes.push({Cliente:cliente,OS:os,'Amostras':r.length,'Em campo':fieldInventoryForSamples(r),'Na sede':reconciledSedeForSamples(r)}))});XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(clientes),'Clientes');const fretesExport=(state.freights||[]).map(f=>({
-  'Código frete':f.code||'',
-  'Base origem':f.base||'',
-  'Previsão chegada':f.eta||'',
-  'Status':f.status||'',
-  'OS no caminhão':(f.os||[]).join(', '),
-  'Contratos/SUP no caminhão':(f.contratos||[]).join(', '),
-  'Transportadora / motorista':f.carrier||'',
-  'Quantidade amostras':state.samples.filter(s=>(f.os||[]).includes(s.os)).length
-}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(fretesExport),'Fretes');const sp=(state.saoPedroEntradas||[]).map(x=>({'Data chegada':x.data,'Coleta referente':x.dataColetaRef||'','OS':x.os,'Contrato/SUP':x.contrato,'Base origem':x.base,'Quantidade':x.quantidade,'Observação':x.observacao}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(sp),'Sao_Pedro_Manual');const rr=receivedRegistryRows().map(r=>({'Código Amostra':r.codigo,'OS':r.os,'ST':r.identificacao,'Cliente':r.cliente,'Data/Hora Recebida':r.primeiraFoto||r.ultimaFoto,'Tag':r.tag,'Usuário':r.usuario,'Encontrada nas Coletas':r._sample?'Sim':'Não'}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rr),'Recebidas_Sond');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(state.imports||[]),'Importacoes');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(conventionalExportRows()),'Pulmao_Convencionais');XLSX.writeFile(wb,`gestao-amostras-${new Date().toISOString().slice(0,10)}.xlsx`);}
+function exportExcel(){const rows=state.samples.map(enriched);const wb=XLSX.utils.book_new();const sampleRows=rows.map(s=>({'Código Amostra':s.codigo,'OS':s.os,'ST':s.identificacao,'Cliente':s.cliente,'Sondador':s.coletadoPor,'Líder':s.lider||'','Data Coleta':s.dataColeta,'Contrato/SUP':s.contrato||'','Base Logística':s.baseLogistica||'','Status Logístico':stageLabels[s.statusLogistico]||s.statusLogistico,'Frete':s.freteCodigo||'','Baixa São Pedro':s.dataChegada||'','Recebida Sond':s.recebidaSond?'Sim':'Não','Data Recebida Sond':s.dataRecebimentoSond||'','Tag Sond':s.tagSond||'','Usuário Recebimento Sond':s.usuarioRecebimentoSond||''}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(sampleRows),'Amostras');const leaders=allCollectors().map(c=>({Sondador:c,Líder:state.leaders[c]||''}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(leaders),'Sondadores_Lideres');const maps=Object.entries(state.mappings||{}).map(([os,m])=>({OS:os,'Cliente':state.samples.find(x=>x.os===os)?.cliente||'',Base:m.base||'','Contrato/SUP (legado)':m.contrato||''}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(maps),'Bases_OS');const clientes=[];Object.entries(state.samples.reduce((acc,s)=>{const c=s.cliente||'SEM CLIENTE';(acc[c]||(acc[c]=[])).push(s);return acc},{})).forEach(([cliente,rows])=>{Object.entries(rows.reduce((a,s)=>{(a[s.os]||(a[s.os]=[])).push(s);return a},{})).forEach(([os,r])=>clientes.push({Cliente:cliente,OS:os,'Amostras':r.length,'Em campo':fieldInventoryForSamples(r),'Na sede':reconciledSedeForSamples(r)}))});XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(clientes),'Clientes');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(state.freights||[]),'Fretes');const sp=(state.saoPedroEntradas||[]).map(x=>({'Data chegada':x.data,'Coleta referente':x.dataColetaRef||'','OS':x.os,'Contrato/SUP':x.contrato,'Base origem':x.base,'Quantidade':x.quantidade,'Observação':x.observacao}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(sp),'Sao_Pedro_Manual');const rr=receivedRegistryRows().map(r=>({'Código Amostra':r.codigo,'OS':r.os,'ST':r.identificacao,'Cliente':r.cliente,'Data/Hora Recebida':r.primeiraFoto||r.ultimaFoto,'Tag':r.tag,'Usuário':r.usuario,'Encontrada nas Coletas':r._sample?'Sim':'Não'}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rr),'Recebidas_Sond');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(state.imports||[]),'Importacoes');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(conventionalExportRows()),'Pulmao_Convencionais');XLSX.writeFile(wb,`gestao-amostras-${new Date().toISOString().slice(0,10)}.xlsx`);}
 function downloadBlob(name,content,type){const blob=new Blob([content],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);}
 function exportBackup(){downloadBlob(`backup-gestao-amostras-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state,null,2),'application/json;charset=utf-8');toast('Backup JSON gerado');}
 function restoreBackupFile(file){const r=new FileReader();r.onload=e=>{try{const obj=normalizeState(JSON.parse(e.target.result));if(!obj.samples?.length)throw new Error('Backup sem amostras.');if(!confirm(`Restaurar backup com ${obj.samples.length} amostras? Os dados atuais serão substituídos.`))return;state=obj;save();toast('Backup restaurado com sucesso');}catch(err){alert('Não foi possível restaurar o backup: '+err.message)}};r.readAsText(file);}
@@ -885,8 +872,7 @@ document.getElementById('saveFreight').onclick=()=>{
         eta=document.getElementById('frEta').value,
         status=document.getElementById('frStatus').value,
         carrier=document.getElementById('frCarrier').value.trim(),
-        oss=uniq(document.getElementById('frOS').value.split(',').map(x=>x.trim()).filter(Boolean)),
-        contratos=uniq(document.getElementById('frContracts').value.split(',').map(x=>x.trim()).filter(Boolean));
+        oss=uniq(document.getElementById('frOS').value.split(',').map(x=>x.trim()).filter(Boolean));
   if(!code||!oss.length)return alert('Informe o código do frete e ao menos uma OS.');
   const duplicate=state.freights.some(x=>x.code===code&&x.code!==editingFreightCode);
   if(duplicate)return alert('Já existe outro frete com esse código.');
@@ -904,7 +890,7 @@ document.getElementById('saveFreight').onclick=()=>{
       if(['FRETE_CONTRATADO','EM_TRANSITO'].includes(s.statusLogistico))s.statusLogistico=s.baseLogistica?'NA_BASE':'COLETADA';
     });
 
-    Object.assign(f,{code,base,eta,status,carrier,os:oss,contratos,updatedAt:new Date().toISOString()});
+    Object.assign(f,{code,base,eta,status,carrier,os:oss,updatedAt:new Date().toISOString()});
 
     // Atualiza/relaciona as OS atuais
     state.samples.filter(s=>oss.includes(s.os)&&(s.freteCodigo===oldCode||!s.freteCodigo||oldOS.includes(s.os))).forEach(s=>{
@@ -921,7 +907,7 @@ document.getElementById('saveFreight').onclick=()=>{
     resetFreightForm();
     toast(`Frete ${code} atualizado`);
   }else{
-    state.freights.push({code,base,eta,status,carrier,os:oss,contratos,createdAt:new Date().toISOString()});
+    state.freights.push({code,base,eta,status,carrier,os:oss,createdAt:new Date().toISOString()});
     state.samples.filter(s=>oss.includes(s.os)).forEach(s=>{
       s.freteCodigo=code;
       if(base&&!s.baseLogistica)s.baseLogistica=base;
