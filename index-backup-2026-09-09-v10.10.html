@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gestão de Amostras — Sond V10.11</title>
+<title>Gestão de Amostras — Sond V10.10</title>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('sond_gestao_theme')||'light'}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
@@ -95,7 +95,7 @@ html[data-theme="dark"] .editing-banner{background:#332d11;color:#ffe78b;border-
     <button data-section="pendencias">⚠ Pendências</button>
     <button data-section="importar">⇧ Importar Dados</button>
   </nav>
-  <div class="side-note"><b>Versão local V10.11</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
+  <div class="side-note"><b>Versão local V10.10</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
 </aside>
 <main class="main">
 <header class="topbar">
@@ -840,23 +840,6 @@ function normalizeKey(k){return String(k||'').normalize('NFD').replace(/[\u0300-
 const colMap={ordemdeservicoos:'os',ordemdeservico:'os',identificacao:'identificacao',qtdadedeamostrasnestasondagem:'qtdSondagem',tomador:'cliente',codigoamostra:'codigo',rfid:'rfid',tipo:'tipo',status:'statusSond',topom:'topo',basem:'baseM',coletadopor:'coletadoPor',datadacoleta:'dataColeta',datadacriacao:'dataCriacao'};
 function parseWorkbook(file){const reader=new FileReader();reader.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const ws=wb.Sheets[wb.SheetNames[0]];const raw=XLSX.utils.sheet_to_json(ws,{defval:''});const mapped=raw.map(r=>{const o={};Object.entries(r).forEach(([k,v])=>{const key=colMap[normalizeKey(k)];if(key)o[key]=v});return o}).filter(x=>x.codigo);if(!mapped.length)throw new Error('Não encontrei a coluna Código Amostra.');previewData=mapped.map(toSample);previewFilename=file.name;showPreview();}catch(err){alert('Não foi possível ler o Excel: '+err.message)}};reader.readAsArrayBuffer(file)}
 function excelDate(v){if(!v)return'';if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);return `${String(d.d).padStart(2,'0')}/${String(d.m).padStart(2,'0')}/${d.y}`;}return String(v).trim()}
-function excelDateTime(v){
-  if(v===null||v===undefined||v==='')return '';
-  if(v instanceof Date && !isNaN(v)){
-    return `${String(v.getDate()).padStart(2,'0')}/${String(v.getMonth()+1).padStart(2,'0')}/${v.getFullYear()} ${String(v.getHours()).padStart(2,'0')}:${String(v.getMinutes()).padStart(2,'0')}`;
-  }
-  if(typeof v==='number'){
-    const d=XLSX.SSF.parse_date_code(v);
-    if(!d)return String(v);
-    return `${String(d.d).padStart(2,'0')}/${String(d.m).padStart(2,'0')}/${d.y} ${String(d.H||0).padStart(2,'0')}:${String(d.M||0).padStart(2,'0')}`;
-  }
-  const raw=String(v).trim();
-  if(!raw)return '';
-  // Mantém datas já formatadas no Excel, mas normaliza ISO quando possível.
-  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
-  if(iso)return `${iso[3]}/${iso[2]}/${iso[1]} ${iso[4]}:${iso[5]}`;
-  return raw;
-}
 function toSample(x){return {os:String(x.os||'').trim(),identificacao:String(x.identificacao||'').trim(),qtdSondagem:Number(x.qtdSondagem||0),cliente:String(x.cliente||'').trim(),codigo:String(x.codigo||'').trim(),rfid:String(x.rfid||'').trim(),tipo:String(x.tipo||'').trim(),statusSond:String(x.statusSond||'').trim(),topo:x.topo??'',baseM:x.baseM??'',coletadoPor:String(x.coletadoPor||'').trim(),dataColeta:excelDate(x.dataColeta),dataCriacao:excelDate(x.dataCriacao),lider:'',baseLogistica:'',contrato:'',statusLogistico:'COLETADA',freteCodigo:'',dataSaida:'',dataPrevistaChegada:'',dataChegada:'',dataRecebimento:'',dataInicioEnsaio:'',dataConclusao:'',observacao:'',recebidaSond:false,dataRecebimentoSond:'',tagSond:'',usuarioRecebimentoSond:'',primeiraFotoSond:'',ultimaFotoSond:'',qtdFotosSond:''}}
 function showPreview(){document.getElementById('preview').classList.add('show');document.getElementById('previewName').innerHTML=`<b>${esc(previewFilename)}</b><br>Prévia antes de gravar neste navegador.`;document.getElementById('pvRecords').textContent=previewData.length;document.getElementById('pvST').textContent=new Set(previewData.map(x=>`${x.os}|${x.identificacao}`)).size;document.getElementById('pvOS').textContent=new Set(previewData.map(x=>x.os)).size;document.getElementById('pvClients').textContent=new Set(previewData.map(x=>x.cliente)).size;}
 function normCode(v){return String(v||'').trim().toUpperCase();}
