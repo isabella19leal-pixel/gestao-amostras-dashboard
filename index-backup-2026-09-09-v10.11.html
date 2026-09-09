@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gestão de Amostras — Sond V10.12</title>
+<title>Gestão de Amostras — Sond V10.11</title>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('sond_gestao_theme')||'light'}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
@@ -95,7 +95,7 @@ html[data-theme="dark"] .editing-banner{background:#332d11;color:#ffe78b;border-
     <button data-section="pendencias">⚠ Pendências</button>
     <button data-section="importar">⇧ Importar Dados</button>
   </nav>
-  <div class="side-note"><b>Versão local V10.12</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
+  <div class="side-note"><b>Versão local V10.11</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
 </aside>
 <main class="main">
 <header class="topbar">
@@ -133,7 +133,7 @@ html[data-theme="dark"] .editing-banner{background:#332d11;color:#ffe78b;border-
 </div>
 <section class="section active" id="section-overview">
   <div class="kpis" id="kpis"></div>
-  <div class="panel" style="margin-bottom:14px"><h4>Resumo operacional</h4><div class="panel-sub">Campo físico e confirmações principais. Fretes ficam concentrados na aba própria para reduzir poluição visual.</div><div class="flow" id="flow"></div><div class="notice" style="margin-top:10px"><b>Conciliação:</b> “São Pedro aguardando Sond” = baixa manual ainda não confirmada na Sond. Conforme os Códigos entram no Excel de Recebidas, esse saldo diminui. <b>Manual + Recebidas Sond nunca são somados em duplicidade.</b> Baixas antigas sem “Coleta referente” não abatam o campo quando a OS possui várias datas de coleta.</div></div>
+  <div class="panel" style="margin-bottom:14px"><h4>Resumo operacional</h4><div class="panel-sub">Campo físico e confirmações principais. Fretes ficam concentrados na aba própria para reduzir poluição visual.</div><div class="flow" id="flow"></div><div class="notice" style="margin-top:10px"><b>Regra única do campo:</b> Visão Geral, Bases, Pulmão e PDF usam a mesma lista de Códigos Amostra. Uma amostra sai de “Em campo” quando é conciliada na sede por baixa manual ou pela Sond. Quando as duas confirmações representam a mesma chegada, ela é contada apenas uma vez.</div></div>
   <div class="grid-2"><div class="panel"><h4>Amostras por cliente</h4><div class="panel-sub">Base filtrada</div><div class="bars" id="chartClient"></div></div><div class="panel"><h4>Coletas por sondador</h4><div class="panel-sub">Quantidade de amostras</div><div class="bars" id="chartCollector"></div></div></div>
   <div class="team-chart-grid">
     <div class="panel">
@@ -256,16 +256,16 @@ html[data-theme="dark"] .editing-banner{background:#332d11;color:#ffe78b;border-
       <div class="field" style="grid-column:span 2"><label>Observação</label><input id="spObs" placeholder="Opcional" /></div>
       <div class="form-actions"><button class="btn primary" id="saveSaoPedro">Registrar chegada</button></div>
     </div>
-    <div class="notice" style="margin-top:12px"><b>Regra:</b> informe também a <b>data da coleta referente</b>. A baixa manual registra a chegada física; quando os mesmos materiais aparecem no Excel de <b>Recebidas Sond</b>, eles reduzem o saldo <b>“Aguardando Sond”</b>. Uma baixa antiga sem lote/data não abate automaticamente uma OS que possui várias datas de coleta.</div>
+    <div class="notice" style="margin-top:12px"><b>Regra:</b> informe também a <b>data da coleta referente</b>. Isso impede que uma baixa antiga da mesma OS desconte amostras de uma coleta mais recente. A aba <b>Recebidos</b> continua considerando somente os Códigos existentes no Excel “Amostras Recebidas” da Sond.</div>
   </div>
-  <div class="panel" style="margin-bottom:14px"><div class="panel-title-row"><div><h4>Conferência de chegada por contrato</h4><div class="panel-sub">A baixa manual representa a chegada física. As Recebidas Sond vão abatendo o saldo manual que ainda aguarda confirmação — nunca são somadas novamente.</div></div><span class="badge yellow">Completo = tudo que foi coletado já está na sede</span></div><div class="table-wrap"><table class="table"><thead><tr><th>Contrato / SUP</th><th>Coletadas</th><th>Manual lançado</th><th>Recebidas Sond</th><th>Manual aguardando Sond</th><th>Total na sede</th><th>Faltam</th><th>Situação</th></tr></thead><tbody id="spCompletenessRows"></tbody></table></div></div>
+  <div class="panel" style="margin-bottom:14px"><div class="panel-title-row"><div><h4>Conferência de chegada por contrato</h4><div class="panel-sub">Compara o que foi coletado com a baixa manual e com as amostras recebidas na Sond. Manual + Sond não são somados duas vezes: vale a maior confirmação por OS/data de coleta.</div></div><span class="badge yellow">Completo = tudo que foi coletado já está na sede</span></div><div class="table-wrap"><table class="table"><thead><tr><th>Contrato / SUP</th><th>Coletadas</th><th>Baixa manual</th><th>Recebidas Sond</th><th>Na sede</th><th>Faltam</th><th>Situação</th></tr></thead><tbody id="spCompletenessRows"></tbody></table></div></div>
   <div class="panel"><h4>Histórico de baixas manuais</h4><div class="panel-sub">Entradas físicas registradas em São Pedro. O sistema sinaliza duplicidade e quantidade acima do coletado.</div><div class="table-wrap"><table class="table"><thead><tr><th>Data chegada</th><th>Coleta referente</th><th>OS</th><th>Contrato/SUP</th><th>Base origem</th><th>Quantidade</th><th>Validação</th><th>Observação</th><th></th></tr></thead><tbody id="spRows"></tbody></table></div></div>
 </section>
 <section class="section" id="section-recebidos">
   <div class="section-head"><div><h3>Recebidos na Sond</h3><p>Esta página é alimentada exclusivamente pelo Excel de amostras recebidas da plataforma Sond.</p></div></div>
   <div class="kpis" id="receivedKpis"></div>
   <div class="notice" style="margin-bottom:14px"><b>Como é calculado “Faltam receber na Sond”:</b> total de amostras do Excel de <b>Coletas</b> no filtro atual − Códigos de Amostra encontrados no Excel de <b>Recebidas da Sond</b>. A baixa manual de São Pedro <b>não entra</b> nesta conta.</div>
-  <div class="panel" style="margin-bottom:14px"><div class="panel-title-row"><div><h4>Completude na sede</h4><div class="panel-sub">Mostra a conciliação entre chegada física e confirmação da Sond. Recebidas Sond reduzem o saldo manual pendente, sem duplicar quantidade.</div></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Contrato / SUP</th><th>Coletadas</th><th>Manual lançado</th><th>Recebidas Sond</th><th>Manual aguardando Sond</th><th>Total na sede</th><th>Faltam</th><th>Situação</th></tr></thead><tbody id="receivedCompletenessRows"></tbody></table></div></div>
+  <div class="panel" style="margin-bottom:14px"><div class="panel-title-row"><div><h4>Completude na sede</h4><div class="panel-sub">Mostra se todas as amostras já coletadas de cada contrato/SUP estão em São Pedro por baixa manual OU confirmação da Sond.</div></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Contrato / SUP</th><th>Coletadas</th><th>Baixa manual</th><th>Recebidas Sond</th><th>Na sede</th><th>Faltam</th><th>Situação</th></tr></thead><tbody id="receivedCompletenessRows"></tbody></table></div></div>
   <div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>Código</th><th>OS</th><th>ST</th><th>Cliente</th><th>Recebida na Sond</th><th>Tag</th><th>Usuário</th><th>Encontrada nas coletas?</th><th></th></tr></thead><tbody id="receivedRows"></tbody></table></div></div>
 </section>
 <section class="section" id="section-convencionais">
@@ -403,28 +403,7 @@ function daysSinceISO(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00')
 function receivedRegistryRows(){const sampleByCode=new Map(state.samples.map(x=>[normCode(x.codigo),enriched(x)]));return Object.values(state.receivedRegistry||{}).map(r=>{const s=sampleByCode.get(normCode(r.codigo));return {...r,_sample:s||null,os:r.os||s?.os||'',identificacao:r.identificacao||s?.identificacao||'',cliente:r.cliente||s?.cliente||'',coletadoPor:s?.coletadoPor||'',lider:s?.lider||'',contrato:s?.contrato||'',baseLogistica:s?.baseLogistica||''};});}
 function collectedForOSDate(os,dateRef){return state.samples.filter(s=>s.os===os&&isoFromBR(s.dataColeta)===dateRef).length;}
 function manualForOSDate(os,dateRef){return (state.saoPedroEntradas||[]).filter(e=>e.os===os&&e.dataColetaRef===dateRef).reduce((a,e)=>a+(Number(e.quantidade)||0),0);}
-function collectionDatesForOS(os){return uniq(state.samples.filter(s=>s.os===os).map(s=>isoFromBR(s.dataColeta)).filter(Boolean)).sort();}
-function legacyManualForOS(os){return (state.saoPedroEntradas||[]).filter(e=>e.os===os&&!e.dataColetaRef).reduce((a,e)=>a+(Number(e.quantidade)||0),0);}
-function effectiveManualForOSDate(os,dateRef){
-  let total=manualForOSDate(os,dateRef);
-  const dates=collectionDatesForOS(os);
-  // Só aproveita baixa antiga sem "Coleta referente" quando não há ambiguidade:
-  // a OS possui uma única data de coleta.
-  if(dates.length===1&&dates[0]===dateRef) total+=legacyManualForOS(os);
-  return total;
-}
-function unresolvedLegacyEntries(){
-  return (state.saoPedroEntradas||[]).filter(e=>!e.dataColetaRef&&collectionDatesForOS(e.os).length!==1);
-}
 function sondReceivedForSamples(rows){const codes=new Set(Object.keys(state.receivedRegistry||{}).map(normCode));return (rows||[]).filter(s=>codes.has(normCode(s.codigo))).length;}
-function manualPendingForSamples(rows){
-  const samples=rows||[];
-  if(!samples.length)return 0;
-  // "Total na sede" já é a união conciliada entre manual e Sond.
-  // Tirando as Recebidas Sond, sobra somente o que chegou fisicamente
-  // mas ainda não foi confirmado pela Sond.
-  return Math.max(0,reconciledSedeForSamples(samples)-sondReceivedForSamples(samples));
-}
 function duplicateManualEntries(){
   const counts={};
   (state.saoPedroEntradas||[]).forEach(e=>{const k=[e.data||'',e.dataColetaRef||'',e.os||'',String(Number(e.quantidade)||0)].join('|||');counts[k]=(counts[k]||0)+1;});
@@ -435,51 +414,37 @@ function contractCompleteness(samples=null,forceGlobal=false){
   const groups={};
   rows.forEach(s=>{const key=s.contrato||`__OS__${s.os}`;if(!groups[key])groups[key]={key,label:s.contrato||`OS ${s.os} (sem SUP)`,rows:[]};groups[key].rows.push(s);});
   const receivedCodes=new Set(Object.keys(state.receivedRegistry||{}).map(normCode));
-  const dupMap=duplicateManualEntries();
-
+  const globalMode=forceGlobal||!hasActiveAnalyticalFilters();
   return Object.values(groups).map(g=>{
-    let manual=0,sond=0,manualPending=0,atSede=0,over=false,duplicate=false,unresolved=false;
-    const buckets={};
-    g.rows.forEach(s=>{const k=sampleBucketKey(s);(buckets[k]||(buckets[k]=[])).push(s);});
-
-    Object.entries(buckets).forEach(([k,rs])=>{
-      const [os,dateRef]=k.split('|||');
-      const fullN=state.samples.filter(s=>s.os===os&&isoFromBR(s.dataColeta)===dateRef).length;
-      const completeBucket=forceGlobal||rs.length===fullN;
-      const m=completeBucket?effectiveManualForOSDate(os,dateRef):0;
-      const sr=rs.filter(s=>receivedCodes.has(normCode(s.codigo))).length;
-      const sede=Math.min(rs.length,Math.max(m,sr));
-
-      manual+=m;
-      sond+=sr;
-      atSede+=sede;
-      manualPending+=Math.max(0,sede-sr);
-      if(m>rs.length)over=true;
-
-      (state.saoPedroEntradas||[]).filter(e=>e.os===os&&(e.dataColetaRef===dateRef||(!e.dataColetaRef&&collectionDatesForOS(os).length===1))).forEach(e=>{
-        const dk=[e.data||'',e.dataColetaRef||'',e.os||'',String(Number(e.quantidade)||0)].join('|||');
-        if((dupMap[dk]||0)>1)duplicate=true;
+    let manual=0,sond=0,atSede=0,over=false,duplicate=false;
+    const dupMap=duplicateManualEntries();
+    if(globalMode){
+      const byOS={};g.rows.forEach(s=>(byOS[s.os]||(byOS[s.os]=[])).push(s));
+      Object.entries(byOS).forEach(([os,rs])=>{
+        const m=(state.saoPedroEntradas||[]).filter(e=>e.os===os).reduce((a,e)=>a+(Number(e.quantidade)||0),0);
+        const sr=rs.filter(s=>receivedCodes.has(normCode(s.codigo))).length;
+        manual+=m;sond+=sr;atSede+=Math.min(rs.length,Math.max(m,sr));
+        if(m>rs.length)over=true;
+        (state.saoPedroEntradas||[]).filter(e=>e.os===os).forEach(e=>{const dk=[e.data||'',e.dataColetaRef||'',e.os||'',String(Number(e.quantidade)||0)].join('|||');if((dupMap[dk]||0)>1)duplicate=true;});
       });
-      if((state.saoPedroEntradas||[]).some(e=>e.os===os&&!e.dataColetaRef&&collectionDatesForOS(os).length>1))unresolved=true;
-    });
-
+    }else{
+      const buckets={};g.rows.forEach(s=>{const k=sampleBucketKey(s);(buckets[k]||(buckets[k]=[])).push(s);});
+      Object.entries(buckets).forEach(([k,rs])=>{
+        const [os,dateRef]=k.split('|||');const fullN=state.samples.filter(s=>s.os===os&&isoFromBR(s.dataColeta)===dateRef).length;
+        const completeBucket=rs.length===fullN;const m=completeBucket?manualForOSDate(os,dateRef):0;const sr=rs.filter(s=>receivedCodes.has(normCode(s.codigo))).length;
+        manual+=m;sond+=sr;atSede+=Math.min(rs.length,Math.max(m,sr));if(m>rs.length)over=true;
+        (state.saoPedroEntradas||[]).filter(e=>e.os===os&&e.dataColetaRef===dateRef).forEach(e=>{const dk=[e.data||'',e.dataColetaRef||'',e.os||'',String(Number(e.quantidade)||0)].join('|||');if((dupMap[dk]||0)>1)duplicate=true;});
+      });
+    }
     const expected=g.rows.length,missing=Math.max(0,expected-atSede);
-    let status='PENDENTE';
-    if(over)status='EXCESSO';
-    else if(duplicate)status='DUPLICIDADE';
-    else if(unresolved)status='VINCULAR_LOTE';
-    else if(expected>0&&missing===0)status='COMPLETO';
-
-    return {...g,expected,manual,sond,manualPending,atSede,missing,status};
-  }).sort((a,b)=>{
-    const rank={EXCESSO:0,DUPLICIDADE:1,VINCULAR_LOTE:2,PENDENTE:3,COMPLETO:4};
-    return rank[a.status]-rank[b.status]||b.missing-a.missing||a.label.localeCompare(b.label,'pt-BR');
-  });
+    let status='PENDENTE';if(over)status='EXCESSO';else if(duplicate)status='DUPLICIDADE';else if(expected>0&&missing===0)status='COMPLETO';
+    return {...g,expected,manual,sond,atSede,missing,status};
+  }).sort((a,b)=>{const rank={EXCESSO:0,DUPLICIDADE:1,PENDENTE:2,COMPLETO:3};return rank[a.status]-rank[b.status]||b.missing-a.missing||a.label.localeCompare(b.label,'pt-BR');});
 }
-function completenessBadge(x){if(x.status==='COMPLETO')return '<span class="badge green">✓ Contrato completo na sede</span>';if(x.status==='EXCESSO')return '<span class="badge red">⚠ Quantidade acima do coletado</span>';if(x.status==='DUPLICIDADE')return '<span class="badge orange">⚠ Possível duplicidade</span>';if(x.status==='VINCULAR_LOTE')return '<span class="badge orange">⚠ Vincular baixa à coleta</span>';return `<span class="badge orange">Faltam ${x.missing}</span>`;}
+function completenessBadge(x){if(x.status==='COMPLETO')return '<span class="badge green">✓ Contrato completo na sede</span>';if(x.status==='EXCESSO')return '<span class="badge red">⚠ Quantidade acima do coletado</span>';if(x.status==='DUPLICIDADE')return '<span class="badge orange">⚠ Possível duplicidade</span>';return `<span class="badge orange">Faltam ${x.missing}</span>`;}
 function renderCompletenessTables(){
   const scope=filtered();const rows=contractCompleteness(scope);
-  const html=rows.length?rows.map(x=>`<tr><td><b>${esc(x.label)}</b></td><td>${x.expected}</td><td>${x.manual}</td><td>${x.sond}</td><td><b>${x.manualPending}</b></td><td><b>${x.atSede}</b></td><td><b>${x.missing}</b></td><td>${completenessBadge(x)}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sem dados para conferir.</td></tr>';
+  const html=rows.length?rows.map(x=>`<tr><td><b>${esc(x.label)}</b></td><td>${x.expected}</td><td>${x.manual}</td><td>${x.sond}</td><td><b>${x.atSede}</b></td><td><b>${x.missing}</b></td><td>${completenessBadge(x)}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">Sem dados para conferir.</td></tr>';
   const a=document.getElementById('spCompletenessRows');if(a)a.innerHTML=html;
   const b=document.getElementById('receivedCompletenessRows');if(b)b.innerHTML=html;
 }
@@ -492,23 +457,22 @@ function renderOverview(){
   const osCount=new Set(ss.map(x=>x.os)).size;
   const emCampo=fieldInventoryForSamples(ss);
   const naSede=reconciledSedeForSamples(ss);
-  const recebidasSond=sondReceivedForSamples(ss);
-  const manualPendente=manualPendingForSamples(ss);
+  const recebidasSond=ss.filter(x=>x.recebidaSond).length;
   const ensaiadas=ss.filter(x=>x.statusLogistico==='ENSAIADA').length;
   const dateFiltered=!!getFilterValues().dt;
   const fieldFoot=dateFiltered?'mesma regra do Pulmão • somente o que permanece fora da sede':'fonte única • manual e Sond conciliados sem duplicidade';
   const vals=[
     ['Amostras em campo',emCampo,fieldFoot,'field-kpi'],
     ['Coletadas na última data',latestCount,latest?brDate(latest):'Sem data','yellow'],
-    ['São Pedro aguardando Sond',manualPendente,'baixa manual restante após descontar Recebidas Sond',''],
-    ['Recebidas Sond',recebidasSond,'já descontadas do saldo manual pendente',''],
+    ['Na sede (conciliado)',naSede,'baixa manual ou Recebida Sond, sem somar duas vezes',''],
+    ['Recebidas Sond',recebidasSond,'confirmações individuais pelo Excel de recebidas',''],
     ['ST distintos',stCount,'OS + Identificação',''],
     ['Ordens de Serviço',osCount,'no filtro atual','']
   ];
   document.getElementById('kpis').innerHTML=vals.map(v=>`<div class="kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
   document.getElementById('flow').innerHTML=[
     ['Em campo',emCampo],
-    ['São Pedro aguardando Sond',manualPendente],
+    ['Na sede',naSede],
     ['Recebidas Sond',recebidasSond],
     ['Ensaiadas',ensaiadas]
   ].map(([label,n])=>`<div class="flow-step"><div class="n">${n}</div><div class="t">${label}</div></div>`).join('');
@@ -647,35 +611,9 @@ function dateOnly(v){if(!v)return'';const m=String(v).match(/(\d{1,2}\/\d{1,2}\/
 function renderStageTables(){
   const entries=(state.saoPedroEntradas||[]).slice().sort((a,b)=>(b.data||'').localeCompare(a.data||'')||(b.createdAt||'').localeCompare(a.createdAt||''));
   const total=entries.reduce((a,e)=>a+(Number(e.quantidade)||0),0);
-  const allRows=state.samples.map(enriched);
-  const manualPendingAll=manualPendingForSamples(allRows);
-  const receivedAll=sondReceivedForSamples(allRows);
-  const unresolved=unresolvedLegacyEntries();
-  const unresolvedQty=unresolved.reduce((a,e)=>a+(Number(e.quantidade)||0),0);
-  const osCount=new Set(entries.map(e=>e.os).filter(Boolean)).size;const dupMap=duplicateManualEntries();const duplicateCount=Object.values(dupMap).filter(n=>n>1).length;const overOS=new Set(entries.filter(e=>{const expected=e.dataColetaRef?collectedForOSDate(e.os,e.dataColetaRef):state.samples.filter(s=>s.os===e.os).length;const qty=e.dataColetaRef?manualForOSDate(e.os,e.dataColetaRef):0;return expected&&qty>expected;}).map(e=>e.os)).size;const alertCount=duplicateCount+overOS+unresolved.length;
-  document.getElementById('spKpis').innerHTML=[
-    ['Aguardando recebimento Sond',manualPendingAll,'manual restante após descontar Recebidas Sond','yellow'],
-    ['Recebidas Sond',receivedAll,'confirmadas por Código Amostra',''],
-    ['Manual lançado',total,'histórico bruto das baixas físicas',''],
-    ['Baixas sem lote',unresolvedQty,unresolved.length?`${unresolved.length} lançamento(s) precisam de coleta referente`:'nenhuma baixa ambígua',unresolved.length?'alert':''],
-    ['Alertas de baixa',alertCount,alertCount?'duplicidade, excesso ou lote não vinculado':'sem inconsistências',alertCount?'alert':'']
-  ].map(v=>`<div class="kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
-  document.getElementById('spRows').innerHTML=entries.length?entries.map(e=>{
-    const dates=collectionDatesForOS(e.os);
-    const expected=e.dataColetaRef?collectedForOSDate(e.os,e.dataColetaRef):0;
-    const total=e.dataColetaRef?manualForOSDate(e.os,e.dataColetaRef):0;
-    const dk=[e.data||'',e.dataColetaRef||'',e.os||'',String(Number(e.quantidade)||0)].join('|||');
-    let validation='<span class="badge green">OK</span>';
-    if(!e.dataColetaRef&&dates.length>1)validation='<span class="badge orange">⚠ Não abate campo até vincular coleta</span>';
-    else if((dupMap[dk]||0)>1)validation='<span class="badge orange">⚠ Duplicada</span>';
-    if(e.dataColetaRef&&expected&&total>expected)validation=`<span class="badge red">⚠ ${total}/${expected}</span>`;
-    const dateCell=e.dataColetaRef
-      ? brDate(e.dataColetaRef)
-      : dates.length
-        ? `<select style="min-width:150px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)" onchange="linkSaoPedroEntryDate('${escAttr(e.id)}',this.value)"><option value="">Vincular coleta...</option>${dates.map(d=>`<option value="${d}">${brDate(d)} (${collectedForOSDate(e.os,d)})</option>`).join('')}</select>`
-        : '<span class="badge orange">Sem coleta disponível</span>';
-    return `<tr><td>${brDate(e.data)}</td><td>${dateCell}</td><td><b>${esc(e.os||'—')}</b></td><td>${esc(e.contrato||'—')}</td><td>${esc(e.base||'—')}</td><td><b>${Number(e.quantidade)||0}</b></td><td>${validation}</td><td>${esc(e.observacao||'—')}</td><td><button class="link-btn" onclick="removeSaoPedroEntry('${escAttr(e.id)}')">Excluir</button></td></tr>`;
-  }).join(''):'<tr><td colspan="9" class="empty">Nenhuma baixa manual registrada em São Pedro.</td></tr>';
+  const osCount=new Set(entries.map(e=>e.os).filter(Boolean)).size;const dupMap=duplicateManualEntries();const duplicateCount=Object.values(dupMap).filter(n=>n>1).length;const overOS=new Set(entries.filter(e=>{const expected=e.dataColetaRef?collectedForOSDate(e.os,e.dataColetaRef):state.samples.filter(s=>s.os===e.os).length;const qty=e.dataColetaRef?manualForOSDate(e.os,e.dataColetaRef):(state.saoPedroEntradas||[]).filter(x=>x.os===e.os).reduce((a,x)=>a+(Number(x.quantidade)||0),0);return expected&&qty>expected;}).map(e=>e.os)).size;const alertCount=duplicateCount+overOS;
+  document.getElementById('spKpis').innerHTML=[['São Pedro — manual',total,'quantidade física registrada','yellow'],['Lançamentos',entries.length,'baixas manuais',''],['OS recebidas',osCount,'OS distintas',''],['Alertas de baixa',alertCount,alertCount?'duplicidade ou excesso para revisar':'sem inconsistências',alertCount?'alert':''],['Última chegada',entries[0]?.data?brDate(entries[0].data):'—','data mais recente','']].map(v=>`<div class="kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
+  document.getElementById('spRows').innerHTML=entries.length?entries.map(e=>{const expected=e.dataColetaRef?collectedForOSDate(e.os,e.dataColetaRef):state.samples.filter(s=>s.os===e.os).length;const total=e.dataColetaRef?manualForOSDate(e.os,e.dataColetaRef):(state.saoPedroEntradas||[]).filter(x=>x.os===e.os).reduce((a,x)=>a+(Number(x.quantidade)||0),0);const dk=[e.data||'',e.dataColetaRef||'',e.os||'',String(Number(e.quantidade)||0)].join('|||');let validation='<span class="badge green">OK</span>';if((dupMap[dk]||0)>1)validation='<span class="badge orange">⚠ Duplicada</span>';if(expected&&total>expected)validation=`<span class="badge red">⚠ ${total}/${expected}</span>`;return `<tr><td>${brDate(e.data)}</td><td>${e.dataColetaRef?brDate(e.dataColetaRef):'<span class="badge orange">Não informado</span>'}</td><td><b>${esc(e.os||'—')}</b></td><td>${esc(e.contrato||'—')}</td><td>${esc(e.base||'—')}</td><td><b>${Number(e.quantidade)||0}</b></td><td>${validation}</td><td>${esc(e.observacao||'—')}</td><td><button class="link-btn" onclick="removeSaoPedroEntry('${escAttr(e.id)}')">Excluir</button></td></tr>`}).join(''):'<tr><td colspan="9" class="empty">Nenhuma baixa manual registrada em São Pedro.</td></tr>';
 
   const filters={search:(document.getElementById('fSearch')?.value||'').trim().toLowerCase(),date:document.getElementById('fDate')?.value||'',client:document.getElementById('fClient')?.value||'',collector:document.getElementById('fCollector')?.value||'',leader:document.getElementById('fLeader')?.value||'',os:document.getElementById('fOS')?.value||'',st:document.getElementById('fST')?.value||'',contract:document.getElementById('fContract')?.value||'',base:document.getElementById('fBase')?.value||'',status:document.getElementById('fStatus')?.value||'',recv:document.getElementById('fReceivedSond')?.value||''};
   let received=receivedRegistryRows().filter(r=>{const text=[r.codigo,r.os,r.identificacao,r.cliente,r.coletadoPor,r.lider,r.contrato,r.baseLogistica,r.tag,r.usuario].join(' ').toLowerCase();if(filters.search&&!text.includes(filters.search))return false;if(filters.date&&(!r._sample||isoFromBR(r._sample.dataColeta)!==filters.date))return false;if(filters.client&&r.cliente!==filters.client)return false;if(filters.collector&&r.coletadoPor!==filters.collector)return false;if(filters.leader&&r.lider!==filters.leader)return false;if(filters.os&&r.os!==filters.os)return false;if(filters.st&&r.identificacao!==filters.st)return false;if(filters.contract&&r.contrato!==filters.contract)return false;if(filters.base&&r.baseLogistica!==filters.base)return false;if(filters.status&&(!r._sample||r._sample.statusLogistico!==filters.status))return false;if(filters.recv==='NAO')return false;return true;});
@@ -703,7 +641,7 @@ function renderStageTables(){
 function saveSaoPedroEntry(){
   const data=document.getElementById('spDate').value,dataColetaRef=document.getElementById('spCollectionDate').value,os=document.getElementById('spOS').value,quantidade=parseInt(document.getElementById('spQty').value,10),contrato=document.getElementById('spContract').value.trim(),base=document.getElementById('spBase').value.trim(),observacao=document.getElementById('spObs').value.trim();
   if(!data)return alert('Informe a data de chegada.');if(!os)return alert('Selecione a OS.');if(!dataColetaRef)return alert('Selecione a data da coleta referente a esta chegada.');if(!quantidade||quantidade<1)return alert('Informe uma quantidade maior que zero.');
-  const expected=collectedForOSDate(os,dataColetaRef);const already=effectiveManualForOSDate(os,dataColetaRef);const after=already+quantidade;
+  const expected=collectedForOSDate(os,dataColetaRef);const osDates=uniq(state.samples.filter(s=>s.os===os).map(s=>isoFromBR(s.dataColeta)).filter(Boolean));const legacyQty=osDates.length===1?(state.saoPedroEntradas||[]).filter(e=>e.os===os&&!e.dataColetaRef).reduce((a,e)=>a+(Number(e.quantidade)||0),0):0;const already=manualForOSDate(os,dataColetaRef)+legacyQty;const after=already+quantidade;
   const exactDuplicate=(state.saoPedroEntradas||[]).find(e=>e.data===data&&e.os===os&&(Number(e.quantidade)||0)===quantidade&&(!e.dataColetaRef||e.dataColetaRef===dataColetaRef));
   if(exactDuplicate){alert(`⚠ POSSÍVEL DUPLICIDADE\n\nJá existe uma baixa idêntica para a OS ${os}, coleta ${brDate(dataColetaRef)}, com ${quantidade} amostras.\n\nO novo lançamento NÃO foi salvo.`);return;}
   if(expected&&after>expected){alert(`⚠ QUANTIDADE ACIMA DO COLETADO\n\nOS: ${os}\nColeta: ${brDate(dataColetaRef)}\nColetadas na Sond: ${expected}\nJá baixadas manualmente: ${already}\nTentativa de adicionar: ${quantidade}\nTotal ficaria: ${after}\n\nO lançamento NÃO foi salvo. Revise a quantidade.`);return;}
@@ -715,18 +653,6 @@ function saveSaoPedroEntry(){
   }
 }
 function removeSaoPedroEntry(id){if(!confirm('Excluir esta baixa manual de São Pedro?'))return;state.saoPedroEntradas=(state.saoPedroEntradas||[]).filter(x=>x.id!==id);save();toast('Baixa manual excluída');}
-function linkSaoPedroEntryDate(id,dateRef){
-  if(!dateRef)return;
-  const e=(state.saoPedroEntradas||[]).find(x=>x.id===id);
-  if(!e)return;
-  const expected=collectedForOSDate(e.os,dateRef);
-  const already=manualForOSDate(e.os,dateRef);
-  const after=already+(Number(e.quantidade)||0);
-  if(expected&&after>expected&&!confirm(`⚠ Esta vinculação deixará ${after} baixas para ${expected} amostras coletadas neste lote. Deseja continuar mesmo assim?`))return;
-  e.dataColetaRef=dateRef;
-  save();
-  toast(`Baixa vinculada à coleta de ${brDate(dateRef)}`);
-}
 function syncSaoPedroForm(){const os=document.getElementById('spOS')?.value||'',m=state.mappings[os]||{};if(document.getElementById('spContract'))document.getElementById('spContract').value=m.contrato||'';if(document.getElementById('spBase'))document.getElementById('spBase').value=m.base||'';const sel=document.getElementById('spCollectionDate');if(sel){const dates=uniq(state.samples.filter(s=>s.os===os).map(s=>isoFromBR(s.dataColeta)).filter(Boolean)).sort((a,b)=>b.localeCompare(a));sel.innerHTML='<option value="">Selecione a data da coleta</option>'+dates.map(d=>`<option value="${d}">${brDate(d)} (${state.samples.filter(s=>s.os===os&&isoFromBR(s.dataColeta)===d).length} amostras)</option>`).join('');if(dates.length===1)sel.value=dates[0];}}
 
 function convDepthKey(v){if(v===null||v===undefined||v==='')return'';const n=Number(v);return Number.isFinite(n)?n.toFixed(3):normText(v);}
@@ -741,30 +667,25 @@ function conventionalFieldSamplesAll(){
   const rows=state.samples.map(enriched).slice();
   const receivedCodes=new Set(rows.filter(s=>s.recebidaSond).map(s=>normCode(s.codigo)));
   const removed=new Set(receivedCodes);
-  const byBucket={};
-  rows.forEach(s=>{const k=sampleBucketKey(s);(byBucket[k]||(byBucket[k]=[])).push(s);});
-
-  // Cada lote OS + data é conciliado separadamente.
-  // A Sond identifica Códigos exatos. A baixa manual completa SOMENTE
-  // o saldo físico que ainda não foi coberto pela Sond.
+  const byBucket={};rows.forEach(s=>{const k=sampleBucketKey(s);(byBucket[k]||(byBucket[k]=[])).push(s);});
+  // Para cada OS + data: Sond identifica códigos exatos. A baixa manual completa apenas a diferença até a maior confirmação física.
   Object.entries(byBucket).forEach(([k,bucket])=>{
     const [os,dateRef]=k.split('|||');
     const received=bucket.filter(s=>receivedCodes.has(normCode(s.codigo))).length;
-    const manual=effectiveManualForOSDate(os,dateRef);
+    const manual=manualForOSDate(os,dateRef);
     let extra=Math.max(0,Math.min(bucket.length,manual)-received);
     if(extra>0){
-      bucket
-        .filter(s=>!removed.has(normCode(s.codigo)))
-        .sort((a,b)=>String(a.codigo).localeCompare(String(b.codigo),'pt-BR',{numeric:true}))
-        .slice(0,extra)
-        .forEach(s=>removed.add(normCode(s.codigo)));
+      bucket.filter(s=>!removed.has(normCode(s.codigo))).sort((a,b)=>String(a.codigo).localeCompare(String(b.codigo),'pt-BR',{numeric:true})).slice(0,extra).forEach(s=>removed.add(normCode(s.codigo)));
     }
   });
-
-  // IMPORTANTE:
-  // baixa antiga sem "Coleta referente" NÃO é aplicada automaticamente
-  // quando a OS possui várias datas de coleta. Ela fica pendente para
-  // o usuário vincular ao lote correto na aba São Pedro.
+  // Baixas legadas sem data de coleta: aplica somente a quantidade ainda não coberta, de forma determinística por OS.
+  const legacyByOS={};(state.saoPedroEntradas||[]).filter(e=>!e.dataColetaRef).forEach(e=>{legacyByOS[e.os]=(legacyByOS[e.os]||0)+(Number(e.quantidade)||0);});
+  Object.entries(legacyByOS).forEach(([os,qtd])=>{
+    const osRows=rows.filter(s=>s.os===os);
+    const already=osRows.filter(s=>removed.has(normCode(s.codigo))).length;
+    const extra=Math.max(0,Math.min(osRows.length,Number(qtd)||0)-already);
+    osRows.filter(s=>!removed.has(normCode(s.codigo))).sort((a,b)=>(isoFromBR(a.dataColeta)||'').localeCompare(isoFromBR(b.dataColeta)||'')||String(a.codigo).localeCompare(String(b.codigo),'pt-BR',{numeric:true})).slice(0,extra).forEach(s=>removed.add(normCode(s.codigo)));
+  });
   return rows.filter(s=>!removed.has(normCode(s.codigo)));
 }
 function conventionalFieldFiltered(){
@@ -859,7 +780,7 @@ function generateConventionalPDF(){
   const sy=34,sw=52,gap=3.5;
   stat(12,sy,sw,'Total coletadas',totalColetadas,C.blue);stat(12+sw+gap,sy,sw,'OS no recorte',uniqueOS,C.yellow);stat(12+(sw+gap)*2,sy,sw,'Contratos/SUP',uniqueContracts,C.yellow);stat(12+(sw+gap)*3,sy,sw,'Em campo',field.amostras,C.yellow);stat(12+(sw+gap)*4,sy,sw,'Na sede / recebidas',sede.amostras,C.green);
   bigPanel(12,58,132,104,'AMOSTRAS EM CAMPO','COLETADAS • AINDA NÃO CONFIRMADAS NA SEDE',field,C.yellow);
-  bigPanel(153,58,132,104,'RECEBIDAS / SÃO PEDRO','MANUAL PENDENTE + RECEBIDAS SOND • SEM DUPLICAR',sede,C.green);
+  bigPanel(153,58,132,104,'RECEBIDAS / SÃO PEDRO','BAIXA MANUAL OU RECEBIDA NA SOND • SEM DUPLICAR',sede,C.green);
   setText(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text('Observação: nas baixas manuais sem identificação por Código Amostra, a distribuição por ST/profundidade é estimada pelo sistema. Ajustes manuais do Pulmão prevalecem para o estoque em campo.',12,171);
 
   // Detalhamento por contrato em páginas adicionais.
