@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gestão de Amostras — Sond V10.4</title>
+<title>Gestão de Amostras — Sond V10.6</title>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('sond_gestao_theme')||'light'}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{--yellow:#f6c400;--yellow2:#ffd83d;--black:#111214;--black2:#1b1d20;--ink:#1f2328;--muted:#70757d;--bg:#f4f5f7;--card:#fff;--line:#e5e7eb;--danger:#c62828;--warn:#a66900;--success:#16794b;--info:#315aa8;--shadow:0 7px 28px rgba(17,18,20,.07);--radius:16px}
 *{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)} button,input,select,textarea{font:inherit}
@@ -69,7 +70,7 @@ html[data-theme="dark"] .base-card.warning{background:#292514}html[data-theme="d
     <button data-section="pendencias">⚠ Pendências</button>
     <button data-section="importar">⇧ Importar Dados</button>
   </nav>
-  <div class="side-note"><b>Versão local V10.4</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
+  <div class="side-note"><b>Versão local V10.6</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
 </aside>
 <main class="main">
 <header class="topbar">
@@ -205,20 +206,24 @@ html[data-theme="dark"] .base-card.warning{background:#292514}html[data-theme="d
   <div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>Código</th><th>OS</th><th>ST</th><th>Cliente</th><th>Recebida na Sond</th><th>Tag</th><th>Usuário</th><th>Encontrada nas coletas?</th><th></th></tr></thead><tbody id="receivedRows"></tbody></table></div></div>
 </section>
 <section class="section" id="section-convencionais">
-  <div class="section-head"><div><h3>Pulmão de Convencionais</h3><p>Previsão de Caracterização e Compactação a partir das amostras coletadas. Os filtros da base recalculam os ensaios automaticamente.</p></div><button class="btn" onclick="exportConventionalExcel()">↓ Exportar pulmão</button></div>
+  <div class="section-head"><div><h3>Pulmão de Convencionais</h3><p>Previsão de Caracterização e Compactação considerando somente as amostras que ainda estão em campo.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="exportConventionalExcel()">↓ Exportar pulmão</button><button class="btn primary" onclick="generateConventionalPDF()">🖨 Gerar PDF</button></div></div>
   <div class="conv-kpis" id="convKpis"></div>
   <div class="panel" style="margin-bottom:14px">
-    <div class="panel-title-row"><div><h4>Regras de contagem</h4><div class="panel-sub">O cálculo automático usa Identificação/ST + Topo + Base (profundidade). Você pode substituir a previsão manualmente por OS e data de coleta.</div></div><span class="badge yellow">Manual prevalece sobre automático</span></div>
+    <div class="panel-title-row"><div><h4>Regras de contagem</h4><div class="panel-sub">O cálculo automático usa Identificação/ST + Topo + Base (profundidade). Amostras já confirmadas na sede são retiradas do pulmão.</div></div><span class="badge yellow">✏️ Manual por contrato prevalece</span></div>
     <div class="conv-rule-box">
       <div class="conv-rule"><b>1. Mesmo furo + mesma profundidade</b>Conta somente <b>1 Caracterização</b> para o grupo. A Compactação conta cada saco/amostra do grupo.</div>
       <div class="conv-rule"><b>2. Exemplo de sacos duplos</b>10 sacos em 5 grupos de mesmo furo/profundidade = <b>5 Caracterizações + 10 Compactações</b>.</div>
       <div class="conv-rule"><b>3. Mais de 5 sacos no mesmo grupo</b>O grupo é marcado como <b>Dosagem futura</b> e contabiliza somente <b>1 Caracterização + 1 Compactação</b>.</div>
     </div>
-    <div class="notice"><b>Importante:</b> a previsão é feita sobre as amostras coletadas no filtro atual. A baixa manual de São Pedro não identifica quais Códigos/ST chegaram, portanto não altera esta previsão de ensaios.</div>
+    <div class="notice"><b>Campo físico:</b> o pulmão exclui amostras recebidas na Sond e também as quantidades já baixadas manualmente em São Pedro. Como a baixa manual é por quantidade e não por Código Amostra, quando ela excede as recebidas identificadas pela Sond a retirada do lote é estimada de forma determinística. Use o <b>✏️ lápis do contrato</b> para corrigir Caracterização/Compactação quando necessário.<br><b>PDF gerencial:</b> o botão <b>Gerar PDF</b> cria um resumo no modelo de pulmão com somente dois focos: <b>amostras em campo (coletadas)</b> e <b>recebidas / São Pedro</b>. Não inclui “amostras a coletar”.</div>
+  </div>
+  <div class="panel" style="margin-bottom:14px">
+    <div class="conv-toolbar"><div><h4 style="margin:0">Planejamento por Contrato / SUP</h4><div class="panel-sub" style="margin:4px 0 0">Clique no lápis para informar manualmente quantas Caracterizações e Compactações aquele contrato vai gerar no campo atual.</div></div><div class="legend"><span class="badge green">Automático</span><span class="badge yellow">✏️ Manual</span></div></div>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Contrato / SUP</th><th>OS</th><th>Amostras em campo</th><th>Caract. auto</th><th>Compact. auto</th><th>Caract. planejada</th><th>Compact. planejada</th><th>Total</th><th>Fonte</th><th></th></tr></thead><tbody id="convContractRows"></tbody></table></div>
   </div>
   <div class="panel">
-    <div class="conv-toolbar"><div><h4 style="margin:0">Planejamento por OS / lote de coleta</h4><div class="panel-sub" style="margin:4px 0 0">Deixe os campos manuais vazios para usar a sugestão automática. O ajuste fica salvo no navegador.</div></div><div class="legend"><span class="badge green">Automático</span><span class="badge yellow">Manual</span><span class="badge orange">Dosagem futura</span></div></div>
-    <div class="table-wrap"><table class="table"><thead><tr><th>Data coleta</th><th>Contrato / SUP</th><th>OS</th><th>Cliente</th><th>Amostras</th><th>Grupos</th><th>Dosagem futura</th><th>Caract. auto</th><th>Compact. auto</th><th>Caract. planejada</th><th>Compact. planejada</th><th>Total</th><th></th></tr></thead><tbody id="convRows"></tbody></table></div>
+    <div class="conv-toolbar"><div><h4 style="margin:0">Detalhamento por OS / lote de coleta</h4><div class="panel-sub" style="margin:4px 0 0">Mostra como a sugestão automática foi formada somente com as amostras que permanecem em campo.</div></div><div class="legend"><span class="badge green">Automático</span><span class="badge yellow">Manual do lote</span><span class="badge orange">Dosagem futura</span></div></div>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Data coleta</th><th>Contrato / SUP</th><th>OS</th><th>Cliente</th><th>Em campo</th><th>Grupos</th><th>Dosagem futura</th><th>Caract. auto</th><th>Compact. auto</th><th>Caract. planejada</th><th>Compact. planejada</th><th>Total</th><th></th></tr></thead><tbody id="convRows"></tbody></table></div>
   </div>
 </section>
 <section class="section" id="section-ensaiados"><div class="section-head"><div><h3>Ensaiados</h3><p>Progresso por OS com base nos status registrados.</p></div></div><div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>OS</th><th>Cliente</th><th>Coletadas</th><th>Recebidas</th><th>Ensaiadas</th><th>Pendentes</th><th>% concluído</th></tr></thead><tbody id="assayedRows"></tbody></table></div></div></section>
@@ -247,8 +252,8 @@ const STAGES=['COLETADA','NA_BASE','AGUARDANDO_FRETE','FRETE_CONTRATADO','EM_TRA
 const stageLabels={COLETADA:'Coletada',NA_BASE:'Na base',AGUARDANDO_FRETE:'Aguard. frete',FRETE_CONTRATADO:'Frete contratado',EM_TRANSITO:'Em trânsito',CHEGOU_SAO_PEDRO:'São Pedro',RECEBIDA:'Recebida',EM_ENSAIO:'Em ensaio',ENSAIADA:'Ensaiada'};
 let state=normalizeState(loadState()); let previewData=null, previewFilename='', receivedPreviewData=null, receivedPreviewFilename='', receivedPreviewDuplicates=[];
 let chartDailyTeamsInst=null, chartTeamRankingInst=null, chartBasesInst=null; const THEME_KEY='sond_gestao_theme';
-function normalizeState(s){s=s||{};s.samples=(s.samples||[]).filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra'&&normalizeKey(x.os)!=='ordemdeservicoos');s.mappings=s.mappings||{};s.leaders=s.leaders||{};s.extraCollectors=s.extraCollectors||[];s.freights=s.freights||[];s.imports=s.imports||[];s.receivedRegistry=s.receivedRegistry||{};s.saoPedroEntradas=s.saoPedroEntradas||[];s.conventionalPlans=s.conventionalPlans||{};s.samples.forEach(x=>{if(x.recebidaSond===undefined)x.recebidaSond=false;if(!x.statusLogistico)x.statusLogistico='COLETADA';});s.lastUpdate=s.lastUpdate||new Date().toISOString();return s;}
-function loadState(){const saved=localStorage.getItem(KEY); if(saved){try{return JSON.parse(saved)}catch(e){}} const cleanSeed=SEED.filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra');return {samples:cleanSeed,mappings:{},leaders:{},extraCollectors:[],freights:[],receivedRegistry:{},saoPedroEntradas:[],conventionalPlans:{},imports:[{file:'Amostras coletadas dia 02-09.xlsx',date:new Date().toISOString(),total:cleanSeed.length,newCount:cleanSeed.length,updated:0,type:'COLETAS'}],lastUpdate:new Date().toISOString()};}
+function normalizeState(s){s=s||{};s.samples=(s.samples||[]).filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra'&&normalizeKey(x.os)!=='ordemdeservicoos');s.mappings=s.mappings||{};s.leaders=s.leaders||{};s.extraCollectors=s.extraCollectors||[];s.freights=s.freights||[];s.imports=s.imports||[];s.receivedRegistry=s.receivedRegistry||{};s.saoPedroEntradas=s.saoPedroEntradas||[];s.conventionalPlans=s.conventionalPlans||{};s.conventionalContractPlans=s.conventionalContractPlans||{};s.samples.forEach(x=>{if(x.recebidaSond===undefined)x.recebidaSond=false;if(!x.statusLogistico)x.statusLogistico='COLETADA';});s.lastUpdate=s.lastUpdate||new Date().toISOString();return s;}
+function loadState(){const saved=localStorage.getItem(KEY); if(saved){try{return JSON.parse(saved)}catch(e){}} const cleanSeed=SEED.filter(x=>x&&x.codigo&&normalizeKey(x.codigo)!=='codigoamostra');return {samples:cleanSeed,mappings:{},leaders:{},extraCollectors:[],freights:[],receivedRegistry:{},saoPedroEntradas:[],conventionalPlans:{},conventionalContractPlans:{},imports:[{file:'Amostras coletadas dia 02-09.xlsx',date:new Date().toISOString(),total:cleanSeed.length,newCount:cleanSeed.length,updated:0,type:'COLETAS'}],lastUpdate:new Date().toISOString()};}
 function save(){state.lastUpdate=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(state));}catch(err){console.error('Erro ao gravar no localStorage:',err);alert('Não foi possível salvar no navegador. Gere um Backup e verifique o espaço de armazenamento do site. Detalhe: '+err.message);return false;}try{renderAll();}catch(err){console.error('Os dados foram salvos, mas houve erro ao atualizar a tela:',err);alert('Os dados foram salvos, mas houve um erro ao atualizar a tela. Atualize a página (Ctrl + F5). Detalhe: '+err.message);}return true;}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 function isoFromBR(v){if(!v)return''; if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v; const m=String(v).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''}
@@ -505,22 +510,147 @@ function conventionalGroups(samples){
   const by={};(samples||[]).forEach(s=>{const k=conventionalGroupKey(s);if(!by[k])by[k]={identificacao:s.identificacao||'—',topo:s.topo,baseM:s.baseM,samples:[]};by[k].samples.push(s);});
   return Object.values(by).map(g=>{const n=g.samples.length;const dosage=n>5;return {...g,count:n,dosage,caracterizacao:1,compactacao:dosage?1:n};}).sort((a,b)=>String(a.identificacao).localeCompare(String(b.identificacao),'pt-BR',{numeric:true}));
 }
+function conventionalFieldSamplesAll(){
+  const rows=state.samples.map(enriched).slice();
+  const receivedCodes=new Set(rows.filter(s=>s.recebidaSond).map(s=>normCode(s.codigo)));
+  const removed=new Set(receivedCodes);
+  const byBucket={};rows.forEach(s=>{const k=sampleBucketKey(s);(byBucket[k]||(byBucket[k]=[])).push(s);});
+  // Para cada OS + data: Sond identifica códigos exatos. A baixa manual completa apenas a diferença até a maior confirmação física.
+  Object.entries(byBucket).forEach(([k,bucket])=>{
+    const [os,dateRef]=k.split('|||');
+    const received=bucket.filter(s=>receivedCodes.has(normCode(s.codigo))).length;
+    const manual=manualForOSDate(os,dateRef);
+    let extra=Math.max(0,Math.min(bucket.length,manual)-received);
+    if(extra>0){
+      bucket.filter(s=>!removed.has(normCode(s.codigo))).sort((a,b)=>String(a.codigo).localeCompare(String(b.codigo),'pt-BR',{numeric:true})).slice(0,extra).forEach(s=>removed.add(normCode(s.codigo)));
+    }
+  });
+  // Baixas legadas sem data de coleta: aplica somente a quantidade ainda não coberta, de forma determinística por OS.
+  const legacyByOS={};(state.saoPedroEntradas||[]).filter(e=>!e.dataColetaRef).forEach(e=>{legacyByOS[e.os]=(legacyByOS[e.os]||0)+(Number(e.quantidade)||0);});
+  Object.entries(legacyByOS).forEach(([os,qtd])=>{
+    const osRows=rows.filter(s=>s.os===os);
+    const already=osRows.filter(s=>removed.has(normCode(s.codigo))).length;
+    const extra=Math.max(0,Math.min(osRows.length,Number(qtd)||0)-already);
+    osRows.filter(s=>!removed.has(normCode(s.codigo))).sort((a,b)=>(isoFromBR(a.dataColeta)||'').localeCompare(isoFromBR(b.dataColeta)||'')||String(a.codigo).localeCompare(String(b.codigo),'pt-BR',{numeric:true})).slice(0,extra).forEach(s=>removed.add(normCode(s.codigo)));
+  });
+  return rows.filter(s=>!removed.has(normCode(s.codigo)));
+}
+function conventionalFieldFiltered(){
+  const fieldCodes=new Set(conventionalFieldSamplesAll().map(s=>normCode(s.codigo)));
+  return filtered().filter(s=>fieldCodes.has(normCode(s.codigo)));
+}
 function conventionalBatches(){
-  const ss=filtered();const by={};
+  const ss=conventionalFieldFiltered(),by={};
   ss.forEach(s=>{const d=isoFromBR(s.dataColeta)||s.dataColeta||'';const k=convBatchKey(s.os,d);if(!by[k])by[k]={key:k,os:s.os,date:d,cliente:s.cliente,contrato:s.contrato||'',samples:[]};by[k].samples.push(s);});
   return Object.values(by).map(b=>{const groups=conventionalGroups(b.samples);const autoChar=groups.reduce((a,g)=>a+g.caracterizacao,0);const autoComp=groups.reduce((a,g)=>a+g.compactacao,0);const dosageGroups=groups.filter(g=>g.dosage).length;const plan=state.conventionalPlans?.[b.key]||{};const hasChar=plan.caracterizacao!==null&&plan.caracterizacao!==undefined&&plan.caracterizacao!=='';const hasComp=plan.compactacao!==null&&plan.compactacao!==undefined&&plan.compactacao!=='';const finalChar=hasChar?Number(plan.caracterizacao):autoChar;const finalComp=hasComp?Number(plan.compactacao):autoComp;return {...b,groups,autoChar,autoComp,dosageGroups,plan,finalChar:Number.isFinite(finalChar)?finalChar:autoChar,finalComp:Number.isFinite(finalComp)?finalComp:autoComp,manual:hasChar||hasComp};}).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(a.os).localeCompare(String(b.os),'pt-BR',{numeric:true}));
 }
-function renderConventional(){
-  const rows=conventionalBatches();const totalSamples=rows.reduce((a,r)=>a+r.samples.length,0),totalChar=rows.reduce((a,r)=>a+r.finalChar,0),totalComp=rows.reduce((a,r)=>a+r.finalComp,0),totalDosage=rows.reduce((a,r)=>a+r.dosageGroups,0),total=totalChar+totalComp;
-  const k=document.getElementById('convKpis');if(k)k.innerHTML=[['Amostras consideradas',totalSamples,'coletadas no filtro atual','yellow'],['Caracterizações previstas',totalChar,'automático ou manual',''],['Compactações previstas',totalComp,'automático ou manual',''],['Total convencionais',total,'caracterização + compactação',''],['Grupos de dosagem futura',totalDosage,'mais de 5 sacos no mesmo furo/profundidade',totalDosage?'yellow':'']].map(v=>`<div class="conv-kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
-  const body=document.getElementById('convRows');if(!body)return;
-  body.innerHTML=rows.length?rows.map(r=>{const id=convDomKey(r.os,r.date);const p=r.plan||{};const charVal=(p.caracterizacao===null||p.caracterizacao===undefined)?'':p.caracterizacao;const compVal=(p.compactacao===null||p.compactacao===undefined)?'':p.compactacao;return `<tr><td>${brDate(r.date)}</td><td>${esc(r.contrato||'<sem SUP>').replace('&lt;sem SUP&gt;','<span class="badge gray">Sem SUP</span>')}</td><td><b>${esc(r.os)}</b></td><td>${esc(r.cliente||'—')}</td><td><b>${r.samples.length}</b></td><td>${r.groups.length}</td><td>${r.dosageGroups?`<span class="badge orange">${r.dosageGroups}</span>`:'0'}</td><td><b>${r.autoChar}</b></td><td><b>${r.autoComp}</b></td><td><input class="conv-input ${charVal!==''?'manual':''}" id="conv-char-${id}" type="number" min="0" step="1" value="${esc(charVal)}" placeholder="${r.autoChar}" onchange="saveConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')"><span class="conv-source">${charVal!==''?'Manual':'Auto'}</span></td><td><input class="conv-input ${compVal!==''?'manual':''}" id="conv-comp-${id}" type="number" min="0" step="1" value="${esc(compVal)}" placeholder="${r.autoComp}" onchange="saveConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')"><span class="conv-source">${compVal!==''?'Manual':'Auto'}</span></td><td><span class="conv-total">${r.finalChar+r.finalComp}</span></td><td><div style="display:flex;gap:8px"><button class="link-btn" onclick="openConventionalDetails('${escAttr(r.os)}','${escAttr(r.date)}')">Detalhes</button>${r.manual?`<button class="link-btn" onclick="resetConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')">Usar auto</button>`:''}</div></td></tr>`;}).join(''):'<tr><td colspan="13" class="empty">Nenhuma amostra coletada corresponde aos filtros atuais.</td></tr>';
+function convContractKey(contract,os){return contract?`SUP|||${String(contract).trim()}`:`OS|||${String(os||'').trim()}`;}
+function conventionalContractSummaries(){
+  const batches=conventionalBatches(),by={};
+  batches.forEach(b=>{const key=convContractKey(b.contrato,b.os);if(!by[key])by[key]={key,label:b.contrato||`Sem SUP • OS ${b.os}`,contrato:b.contrato||'',oss:new Set(),samples:0,autoChar:0,autoComp:0,baseChar:0,baseComp:0,dosageGroups:0,batches:[]};const g=by[key];g.oss.add(b.os);g.samples+=b.samples.length;g.autoChar+=b.autoChar;g.autoComp+=b.autoComp;g.baseChar+=b.finalChar;g.baseComp+=b.finalComp;g.dosageGroups+=b.dosageGroups;g.batches.push(b);});
+  return Object.values(by).map(g=>{const p=state.conventionalContractPlans?.[g.key]||{};const hc=p.caracterizacao!==null&&p.caracterizacao!==undefined&&p.caracterizacao!=='';const hp=p.compactacao!==null&&p.compactacao!==undefined&&p.compactacao!=='';const finalChar=hc?Number(p.caracterizacao):g.baseChar;const finalComp=hp?Number(p.compactacao):g.baseComp;return {...g,osList:[...g.oss],plan:p,finalChar:Number.isFinite(finalChar)?finalChar:g.baseChar,finalComp:Number.isFinite(finalComp)?finalComp:g.baseComp,manualContract:hc||hp,manualBatch:g.batches.some(b=>b.manual)};}).sort((a,b)=>b.samples-a.samples||a.label.localeCompare(b.label,'pt-BR',{numeric:true}));
 }
-function saveConventionalPlan(os,date){const id=convDomKey(os,date),charEl=document.getElementById(`conv-char-${id}`),compEl=document.getElementById(`conv-comp-${id}`);if(!charEl||!compEl)return;const cv=charEl.value.trim(),pv=compEl.value.trim();const c=cv===''?null:Math.max(0,Math.trunc(Number(cv)||0)),p=pv===''?null:Math.max(0,Math.trunc(Number(pv)||0));const key=convBatchKey(os,date);if(c===null&&p===null)delete state.conventionalPlans[key];else state.conventionalPlans[key]={caracterizacao:c,compactacao:p,updatedAt:new Date().toISOString()};save();toast('Planejamento convencional salvo');}
-function resetConventionalPlan(os,date){delete state.conventionalPlans[convBatchKey(os,date)];save();toast('Contagem automática restaurada');}
-function openConventionalDetails(os,date){const row=conventionalBatches().find(r=>r.os===os&&(isoFromBR(r.date)||r.date)===(isoFromBR(date)||date));if(!row)return;document.getElementById('modalTitle').textContent=`Pulmão • ${os} • ${brDate(date)}`;const grp=row.groups.map(g=>`<tr><td><b>${esc(g.identificacao)}</b></td><td>${esc(g.topo??'—')} a ${esc(g.baseM??'—')} m</td><td><b>${g.count}</b></td><td>${g.dosage?'<span class="badge orange">Dosagem futura</span>':'<span class="badge green">Convencional</span>'}</td><td><b>${g.caracterizacao}</b></td><td><b>${g.compactacao}</b></td></tr>`).join('');document.getElementById('modalBody').innerHTML=`<div class="details-grid"><div class="detail"><small>Contrato/SUP</small>${esc(row.contrato||'Não vinculado')}</div><div class="detail"><small>Cliente</small>${esc(row.cliente||'—')}</div><div class="detail"><small>Amostras</small>${row.samples.length}</div><div class="detail"><small>Grupos ST + profundidade</small>${row.groups.length}</div></div><div class="notice" style="margin-bottom:12px"><b>Previsão atual:</b> ${row.finalChar} Caracterizações + ${row.finalComp} Compactações = <b>${row.finalChar+row.finalComp} ensaios</b>. ${row.manual?'Há ajuste manual neste lote.':'Contagem automática pelas regras cadastradas.'}</div><div class="table-wrap"><table class="table"><thead><tr><th>Furo / ST</th><th>Profundidade</th><th>Sacos</th><th>Regra</th><th>Caracterização</th><th>Compactação</th></tr></thead><tbody>${grp}</tbody></table></div><div class="conv-detail-note">Regra: mais de 5 sacos no mesmo ST e mesma profundidade = 1 Caracterização + 1 Compactação, sinalizado como dosagem futura.</div>`;showModal('detailsModal');}
-function conventionalExportRows(){return conventionalBatches().map(r=>({'Data Coleta':brDate(r.date),'Contrato/SUP':r.contrato||'','OS':r.os,'Cliente':r.cliente,'Amostras Coletadas':r.samples.length,'Grupos ST+Profundidade':r.groups.length,'Grupos Dosagem Futura':r.dosageGroups,'Caracterização Automática':r.autoChar,'Compactação Automática':r.autoComp,'Caracterização Planejada':r.finalChar,'Compactação Planejada':r.finalComp,'Total Ensaios':r.finalChar+r.finalComp,'Fonte':r.manual?'Manual/Auto':'Automático'}));}
-function exportConventionalExcel(){const rows=conventionalExportRows();if(!rows.length){alert('Não há dados de convencionais no filtro atual.');return;}const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Pulmao_Convencionais');XLSX.writeFile(wb,`pulmao-convencionais-${new Date().toISOString().slice(0,10)}.xlsx`);}
+function renderConventional(){
+  const rows=conventionalBatches(),contracts=conventionalContractSummaries();
+  const totalSamples=contracts.reduce((a,r)=>a+r.samples,0),totalChar=contracts.reduce((a,r)=>a+r.finalChar,0),totalComp=contracts.reduce((a,r)=>a+r.finalComp,0),totalDosage=contracts.reduce((a,r)=>a+r.dosageGroups,0),total=totalChar+totalComp;
+  const k=document.getElementById('convKpis');if(k)k.innerHTML=[['Amostras em campo',totalSamples,'exclui São Pedro / recebidas Sond','yellow'],['Caracterizações previstas',totalChar,'automático ou manual',''],['Compactações previstas',totalComp,'automático ou manual',''],['Total convencionais',total,'caracterização + compactação',''],['Grupos de dosagem futura',totalDosage,'mais de 5 sacos no mesmo furo/profundidade',totalDosage?'yellow':'']].map(v=>`<div class="conv-kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
+  const cb=document.getElementById('convContractRows');if(cb)cb.innerHTML=contracts.length?contracts.map(g=>{const source=g.manualContract?'Manual contrato':g.manualBatch?'Manual lote + auto':'Automático';return `<tr><td><b>${esc(g.label)}</b></td><td>${g.osList.map(x=>`<span class="badge gray">${esc(x)}</span>`).join(' ')}</td><td><b>${g.samples}</b></td><td>${g.autoChar}</td><td>${g.autoComp}</td><td><b>${g.finalChar}</b></td><td><b>${g.finalComp}</b></td><td><span class="conv-total">${g.finalChar+g.finalComp}</span></td><td><span class="badge ${g.manualContract?'yellow':g.manualBatch?'orange':'green'}">${source}</span></td><td><button class="btn" style="padding:7px 10px" onclick="openContractConventionalPlan('${escAttr(g.key)}')" title="Editar quantidade manual">✏️</button></td></tr>`;}).join(''):'<tr><td colspan="10" class="empty">Nenhuma amostra em campo corresponde aos filtros atuais.</td></tr>';
+  const body=document.getElementById('convRows');if(!body)return;
+  body.innerHTML=rows.length?rows.map(r=>{const id=convDomKey(r.os,r.date);const p=r.plan||{};const charVal=(p.caracterizacao===null||p.caracterizacao===undefined)?'':p.caracterizacao;const compVal=(p.compactacao===null||p.compactacao===undefined)?'':p.compactacao;return `<tr><td>${brDate(r.date)}</td><td>${esc(r.contrato||'<sem SUP>').replace('&lt;sem SUP&gt;','<span class="badge gray">Sem SUP</span>')}</td><td><b>${esc(r.os)}</b></td><td>${esc(r.cliente||'—')}</td><td><b>${r.samples.length}</b></td><td>${r.groups.length}</td><td>${r.dosageGroups?`<span class="badge orange">${r.dosageGroups}</span>`:'0'}</td><td><b>${r.autoChar}</b></td><td><b>${r.autoComp}</b></td><td><input class="conv-input ${charVal!==''?'manual':''}" id="conv-char-${id}" type="number" min="0" step="1" value="${esc(charVal)}" placeholder="${r.autoChar}" onchange="saveConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')"><span class="conv-source">${charVal!==''?'Manual':'Auto'}</span></td><td><input class="conv-input ${compVal!==''?'manual':''}" id="conv-comp-${id}" type="number" min="0" step="1" value="${esc(compVal)}" placeholder="${r.autoComp}" onchange="saveConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')"><span class="conv-source">${compVal!==''?'Manual':'Auto'}</span></td><td><span class="conv-total">${r.finalChar+r.finalComp}</span></td><td><div style="display:flex;gap:8px"><button class="link-btn" onclick="openConventionalDetails('${escAttr(r.os)}','${escAttr(r.date)}')">Detalhes</button>${r.manual?`<button class="link-btn" onclick="resetConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')">Usar auto</button>`:''}</div></td></tr>`;}).join(''):'<tr><td colspan="13" class="empty">Nenhuma amostra em campo corresponde aos filtros atuais.</td></tr>';
+}
+function saveConventionalPlan(os,date){const id=convDomKey(os,date),charEl=document.getElementById(`conv-char-${id}`),compEl=document.getElementById(`conv-comp-${id}`);if(!charEl||!compEl)return;const cv=charEl.value.trim(),pv=compEl.value.trim();const c=cv===''?null:Math.max(0,Math.trunc(Number(cv)||0)),p=pv===''?null:Math.max(0,Math.trunc(Number(pv)||0));const key=convBatchKey(os,date);if(c===null&&p===null)delete state.conventionalPlans[key];else state.conventionalPlans[key]={caracterizacao:c,compactacao:p,updatedAt:new Date().toISOString()};save();toast('Planejamento convencional do lote salvo');}
+function resetConventionalPlan(os,date){delete state.conventionalPlans[convBatchKey(os,date)];save();toast('Contagem automática do lote restaurada');}
+function openContractConventionalPlan(key){
+  const g=conventionalContractSummaries().find(x=>x.key===key);if(!g)return;
+  const p=state.conventionalContractPlans?.[key]||{};const cv=(p.caracterizacao===null||p.caracterizacao===undefined)?'':p.caracterizacao,pv=(p.compactacao===null||p.compactacao===undefined)?'':p.compactacao;
+  document.getElementById('modalTitle').textContent=`✏️ Planejamento • ${g.label}`;
+  document.getElementById('modalBody').innerHTML=`<div class="details-grid"><div class="detail"><small>Amostras em campo</small>${g.samples}</div><div class="detail"><small>OS vinculadas</small>${g.osList.length}</div><div class="detail"><small>Caracterização automática</small>${g.autoChar}</div><div class="detail"><small>Compactação automática</small>${g.autoComp}</div></div><div class="notice" style="margin-bottom:14px"><b>Informe manualmente somente se quiser substituir a previsão.</b> Deixe vazio para utilizar o cálculo automático/ajustes dos lotes.</div><div class="form-grid"><div class="field"><label>Caracterizações planejadas</label><input id="contractConvChar" type="number" min="0" step="1" value="${esc(cv)}" placeholder="${g.baseChar}"></div><div class="field"><label>Compactações planejadas</label><input id="contractConvComp" type="number" min="0" step="1" value="${esc(pv)}" placeholder="${g.baseComp}"></div></div><div style="display:flex;justify-content:space-between;gap:8px;margin-top:16px"><button class="btn" onclick="clearContractConventionalPlan('${escAttr(key)}')">Usar automático</button><button class="btn primary" onclick="saveContractConventionalPlan('${escAttr(key)}')">Salvar planejamento</button></div>`;
+  showModal('detailsModal');
+}
+function saveContractConventionalPlan(key){const cEl=document.getElementById('contractConvChar'),pEl=document.getElementById('contractConvComp');if(!cEl||!pEl)return;const cv=cEl.value.trim(),pv=pEl.value.trim();const c=cv===''?null:Math.max(0,Math.trunc(Number(cv)||0)),p=pv===''?null:Math.max(0,Math.trunc(Number(pv)||0));if(c===null&&p===null)delete state.conventionalContractPlans[key];else state.conventionalContractPlans[key]={caracterizacao:c,compactacao:p,updatedAt:new Date().toISOString()};save();hideModal('detailsModal');toast('Planejamento manual do contrato salvo');}
+function clearContractConventionalPlan(key){delete state.conventionalContractPlans[key];save();hideModal('detailsModal');toast('Planejamento do contrato voltou ao automático');}
+function openConventionalDetails(os,date){const row=conventionalBatches().find(r=>r.os===os&&(isoFromBR(r.date)||r.date)===(isoFromBR(date)||date));if(!row)return;document.getElementById('modalTitle').textContent=`Pulmão • ${os} • ${brDate(date)}`;const grp=row.groups.map(g=>`<tr><td><b>${esc(g.identificacao)}</b></td><td>${esc(g.topo??'—')} a ${esc(g.baseM??'—')} m</td><td><b>${g.count}</b></td><td>${g.dosage?'<span class="badge orange">Dosagem futura</span>':'<span class="badge green">Convencional</span>'}</td><td><b>${g.caracterizacao}</b></td><td><b>${g.compactacao}</b></td></tr>`).join('');document.getElementById('modalBody').innerHTML=`<div class="details-grid"><div class="detail"><small>Contrato/SUP</small>${esc(row.contrato||'Não vinculado')}</div><div class="detail"><small>Cliente</small>${esc(row.cliente||'—')}</div><div class="detail"><small>Amostras em campo</small>${row.samples.length}</div><div class="detail"><small>Grupos ST + profundidade</small>${row.groups.length}</div></div><div class="notice" style="margin-bottom:12px"><b>Previsão atual do lote:</b> ${row.finalChar} Caracterizações + ${row.finalComp} Compactações = <b>${row.finalChar+row.finalComp} ensaios</b>. ${row.manual?'Há ajuste manual neste lote.':'Contagem automática pelas regras cadastradas.'}</div><div class="table-wrap"><table class="table"><thead><tr><th>Furo / ST</th><th>Profundidade</th><th>Sacos em campo</th><th>Regra</th><th>Caracterização</th><th>Compactação</th></tr></thead><tbody>${grp}</tbody></table></div><div class="conv-detail-note">Regra: mais de 5 sacos no mesmo ST e mesma profundidade = 1 Caracterização + 1 Compactação, sinalizado como dosagem futura.</div>`;showModal('detailsModal');}
+function conventionalExportRows(){return conventionalBatches().map(r=>({'Data Coleta':brDate(r.date),'Contrato/SUP':r.contrato||'','OS':r.os,'Cliente':r.cliente,'Amostras em Campo':r.samples.length,'Grupos ST+Profundidade':r.groups.length,'Grupos Dosagem Futura':r.dosageGroups,'Caracterização Automática':r.autoChar,'Compactação Automática':r.autoComp,'Caracterização Planejada Lote':r.finalChar,'Compactação Planejada Lote':r.finalComp,'Total Lote':r.finalChar+r.finalComp,'Fonte Lote':r.manual?'Manual/Auto':'Automático'}));}
+function conventionalContractExportRows(){return conventionalContractSummaries().map(g=>({'Contrato/SUP':g.label,'OS':g.osList.join(', '),'Amostras em Campo':g.samples,'Caracterização Automática':g.autoChar,'Compactação Automática':g.autoComp,'Caracterização Planejada':g.finalChar,'Compactação Planejada':g.finalComp,'Total Planejado':g.finalChar+g.finalComp,'Fonte':g.manualContract?'Manual contrato':g.manualBatch?'Manual lote + auto':'Automático'}));}
+function exportConventionalExcel(){const rows=conventionalExportRows(),contracts=conventionalContractExportRows();if(!rows.length){alert('Não há amostras em campo no filtro atual.');return;}const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(contracts),'Resumo_Contratos');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Detalhe_Lotes');XLSX.writeFile(wb,`pulmao-convencionais-${new Date().toISOString().slice(0,10)}.xlsx`);}
+
+function conventionalSedeFiltered(){
+  const all=filtered();
+  const fieldCodes=new Set(conventionalFieldFiltered().map(s=>normCode(s.codigo)));
+  return all.filter(s=>!fieldCodes.has(normCode(s.codigo)));
+}
+function conventionalAutoTotalsForSamples(samples){
+  const byBatch={};
+  (samples||[]).forEach(s=>{const d=isoFromBR(s.dataColeta)||s.dataColeta||'';const k=convBatchKey(s.os,d);(byBatch[k]||(byBatch[k]=[])).push(s);});
+  let caracterizacao=0,compactacao=0,dosagem=0;
+  Object.values(byBatch).forEach(rows=>{const gs=conventionalGroups(rows);caracterizacao+=gs.reduce((a,g)=>a+g.caracterizacao,0);compactacao+=gs.reduce((a,g)=>a+g.compactacao,0);dosagem+=gs.filter(g=>g.dosage).length;});
+  return {amostras:(samples||[]).length,caracterizacao,compactacao,total:caracterizacao+compactacao,dosagem};
+}
+function conventionalSedeContractSummaries(){
+  const by={};
+  conventionalSedeFiltered().forEach(s=>{const key=convContractKey(s.contrato,s.os);if(!by[key])by[key]={key,label:s.contrato||`Sem SUP • OS ${s.os}`,contrato:s.contrato||'',oss:new Set(),samples:[]};const g=by[key];g.oss.add(s.os);g.samples.push(s);});
+  return Object.values(by).map(g=>{const t=conventionalAutoTotalsForSamples(g.samples);return {...g,osList:[...g.oss],amostras:t.amostras,caracterizacao:t.caracterizacao,compactacao:t.compactacao,total:t.total};});
+}
+function conventionalPdfRows(){
+  const field=conventionalContractSummaries(),sede=conventionalSedeContractSummaries(),by={};
+  field.forEach(g=>{by[g.key]={key:g.key,label:g.label,os:new Set(g.osList),campo:g.samples,carCampo:g.finalChar,compCampo:g.finalComp,sede:0,carSede:0,compSede:0};});
+  sede.forEach(g=>{if(!by[g.key])by[g.key]={key:g.key,label:g.label,os:new Set(),campo:0,carCampo:0,compCampo:0,sede:0,carSede:0,compSede:0};const r=by[g.key];g.osList.forEach(x=>r.os.add(x));r.sede=g.amostras;r.carSede=g.caracterizacao;r.compSede=g.compactacao;});
+  return Object.values(by).map(r=>({...r,osList:[...r.os]})).sort((a,b)=>(b.campo+b.sede)-(a.campo+a.sede)||a.label.localeCompare(b.label,'pt-BR',{numeric:true}));
+}
+function conventionalPdfFilterText(){
+  const parts=activeFilterDefs().map(([id,label,fmt])=>{const v=document.getElementById(id)?.value||'';return v?`${label}: ${fmt(v)}`:'';}).filter(Boolean);
+  return parts.length?parts.join('  |  '):'Todos os dados importados';
+}
+function generateConventionalPDF(){
+  if(!window.jspdf?.jsPDF){alert('O gerador de PDF não foi carregado. Verifique sua conexão com a internet e atualize a página.');return;}
+  const current=filtered();
+  if(!current.length){alert('Não há amostras no filtro atual para gerar o PDF.');return;}
+  const fieldContracts=conventionalContractSummaries();
+  const field={amostras:fieldContracts.reduce((a,g)=>a+g.samples,0),caracterizacao:fieldContracts.reduce((a,g)=>a+g.finalChar,0),compactacao:fieldContracts.reduce((a,g)=>a+g.finalComp,0)};
+  field.total=field.caracterizacao+field.compactacao;
+  const sede=conventionalAutoTotalsForSamples(conventionalSedeFiltered());
+  const rows=conventionalPdfRows();
+  const totalColetadas=current.length;
+  const uniqueOS=new Set(current.map(s=>s.os).filter(Boolean)).size;
+  const uniqueContracts=new Set(current.map(s=>s.contrato||`OS:${s.os}`).filter(Boolean)).size;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+  const C={dark:[15,18,23],panel:[28,33,41],yellow:[246,196,0],green:[30,155,93],blue:[42,88,160],white:[248,249,251],ink:[30,34,39],muted:[105,113,122],line:[220,224,229],soft:[245,247,249]};
+  const setFill=c=>doc.setFillColor(...c),setText=c=>doc.setTextColor(...c),setDraw=c=>doc.setDrawColor(...c);
+  const money=n=>String(Math.max(0,Math.round(Number(n)||0))).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  const footer=(pageNo,totalPages)=>{setText(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text(`Pulmão de Convencionais • Gestão de Amostras Sond • Página ${pageNo}/${totalPages}`,12,H-6);doc.text('Foco: coletadas, em campo e recebidas/São Pedro. Não inclui previsão de amostras a coletar.',W-12,H-6,{align:'right'});};
+  const header=(subtitle='Resumo gerencial')=>{setFill(C.dark);doc.rect(0,0,W,26,'F');setFill(C.yellow);doc.rect(0,25,W,1.3,'F');setText(C.white);doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text('PULMÃO DE CONVENCIONAIS',12,11);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(subtitle,12,18);setText(C.yellow);doc.setFont('helvetica','bold');doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`,W-12,11,{align:'right'});setText(C.white);doc.setFont('helvetica','normal');doc.setFontSize(7.5);const f=doc.splitTextToSize(conventionalPdfFilterText(),110);doc.text(f,W-12,17,{align:'right'});};
+  const stat=(x,y,w,label,value,accent=C.yellow)=>{setFill(C.soft);setDraw(C.line);doc.roundedRect(x,y,w,18,2,2,'FD');setFill(accent);doc.rect(x,y,1.8,18,'F');setText(C.muted);doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.text(label.toUpperCase(),x+5,y+6);setText(C.ink);doc.setFontSize(15);doc.text(money(value),x+5,y+14);};
+  const bigPanel=(x,y,w,h,title,subtitle,data,accent)=>{setFill(C.panel);setDraw(accent);doc.setLineWidth(.7);doc.roundedRect(x,y,w,h,4,4,'FD');setFill(accent);doc.roundedRect(x+5,y+5,w-10,12,2,2,'F');setText(C.dark);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(title,x+w/2,y+13,{align:'center'});setText(C.white);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(subtitle,x+w/2,y+23,{align:'center'});doc.setFont('helvetica','bold');doc.setFontSize(27);doc.text(money(data.amostras),x+w/2,y+38,{align:'center'});doc.setFontSize(7.5);doc.setFont('helvetica','normal');setText([195,201,209]);doc.text('AMOSTRAS FÍSICAS',x+w/2,y+44,{align:'center'});
+    const half=(w-16)/2;setFill([36,42,51]);doc.roundedRect(x+5,y+50,half,h-56,2.5,2.5,'F');doc.roundedRect(x+11+half,y+50,half,h-56,2.5,2.5,'F');setText(accent);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('PARA CARACTERIZAÇÃO',x+5+half/2,y+58,{align:'center'});doc.text('PARA COMPACTAÇÃO',x+11+half+half/2,y+58,{align:'center'});setText(C.white);doc.setFontSize(22);doc.text(money(data.caracterizacao),x+5+half/2,y+72,{align:'center'});doc.text(money(data.compactacao),x+11+half+half/2,y+72,{align:'center'});doc.setFontSize(7.5);setText([195,201,209]);doc.setFont('helvetica','normal');doc.text(`Total: ${money(data.total||((data.caracterizacao||0)+(data.compactacao||0)))} ensaios`,x+w/2,y+h-6,{align:'center'});};
+
+  header('Resumo das amostras já coletadas: campo x recebidas / São Pedro');
+  const sy=34,sw=52,gap=3.5;
+  stat(12,sy,sw,'Total coletadas',totalColetadas,C.blue);stat(12+sw+gap,sy,sw,'OS no recorte',uniqueOS,C.yellow);stat(12+(sw+gap)*2,sy,sw,'Contratos/SUP',uniqueContracts,C.yellow);stat(12+(sw+gap)*3,sy,sw,'Em campo',field.amostras,C.yellow);stat(12+(sw+gap)*4,sy,sw,'Na sede / recebidas',sede.amostras,C.green);
+  bigPanel(12,58,132,104,'AMOSTRAS EM CAMPO','COLETADAS • AINDA NÃO CONFIRMADAS NA SEDE',{...field,total:field.total},C.yellow);
+  bigPanel(153,58,132,104,'RECEBIDAS / SÃO PEDRO','BAIXA MANUAL OU RECEBIDA NA SOND • SEM DUPLICAR',sede,C.green);
+  setText(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text('Observação: nas baixas manuais sem identificação por Código Amostra, a distribuição por ST/profundidade é estimada pelo sistema. Ajustes manuais do Pulmão prevalecem para o estoque em campo.',12,171);
+
+  // Detalhamento por contrato em páginas adicionais.
+  const perPage=17,totalTablePages=Math.max(1,Math.ceil(rows.length/perPage)),totalPages=1+(rows.length?totalTablePages:0);
+  footer(1,totalPages);
+  if(rows.length){
+    for(let page=0;page<totalTablePages;page++){
+      doc.addPage('a4','landscape');header('Detalhamento por Contrato / SUP');
+      const cols=[{t:'Contrato / SUP',w:58},{t:'OS',w:45},{t:'Campo',w:20},{t:'Caract. campo',w:23},{t:'Compact. campo',w:25},{t:'Sede',w:20},{t:'Caract. sede',w:23},{t:'Compact. sede',w:25},{t:'Total ensaios',w:25}];
+      let x=12,y=34;setFill(C.dark);doc.rect(12,y,cols.reduce((a,c)=>a+c.w,0),9,'F');setText(C.white);doc.setFont('helvetica','bold');doc.setFontSize(7.2);cols.forEach(c=>{doc.text(c.t,x+2,y+5.8);x+=c.w;});y+=9;
+      const slice=rows.slice(page*perPage,(page+1)*perPage);
+      slice.forEach((r,i)=>{const vals=[r.label,r.osList.join(', '),r.campo,r.carCampo,r.compCampo,r.sede,r.carSede,r.compSede,r.carCampo+r.compCampo+r.carSede+r.compSede];x=12;setFill(i%2?C.white:C.soft);doc.rect(12,y,cols.reduce((a,c)=>a+c.w,0),8,'F');setDraw(C.line);doc.line(12,y+8,12+cols.reduce((a,c)=>a+c.w,0),y+8);doc.setFont('helvetica',i===0?'bold':'normal');doc.setFontSize(7);setText(C.ink);vals.forEach((v,idx)=>{const c=cols[idx];if(idx<2){const txt=doc.splitTextToSize(String(v??'—'),c.w-4)[0]||'—';doc.text(txt,x+2,y+5.2);}else{doc.text(money(v),x+c.w-2,y+5.2,{align:'right'});}x+=c.w;});y+=8;});
+      const pageRows=slice;const totals=pageRows.reduce((a,r)=>({campo:a.campo+r.campo,carCampo:a.carCampo+r.carCampo,compCampo:a.compCampo+r.compCampo,sede:a.sede+r.sede,carSede:a.carSede+r.carSede,compSede:a.compSede+r.compSede}),{campo:0,carCampo:0,compCampo:0,sede:0,carSede:0,compSede:0});
+      y+=4;setFill([255,249,218]);setDraw(C.yellow);doc.roundedRect(12,y,273,13,2,2,'FD');setText(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text(`Página: Campo ${money(totals.campo)} amostras • ${money(totals.carCampo)} caracterizações • ${money(totals.compCampo)} compactações`,17,y+5.2);doc.text(`Sede ${money(totals.sede)} amostras • ${money(totals.carSede)} caracterizações • ${money(totals.compSede)} compactações`,17,y+10);
+      footer(page+2,totalPages);
+    }
+  }
+  const filename=`pulmao-convencionais-${new Date().toISOString().slice(0,10)}.pdf`;
+  doc.save(filename);toast('PDF do Pulmão gerado');
+}
+
 
 function renderAssayed(){const ss=filtered();const by={};ss.forEach(s=>{if(!by[s.os])by[s.os]={os:s.os,cliente:s.cliente,total:0,rec:0,ens:0};const g=by[s.os];g.total++;if(stageAtLeast(s.statusLogistico,'RECEBIDA'))g.rec++;if(s.statusLogistico==='ENSAIADA')g.ens++});document.getElementById('assayedRows').innerHTML=Object.values(by).sort((a,b)=>b.total-a.total).map(g=>{const pct=g.rec?Math.round(g.ens/g.rec*100):0;return `<tr><td><b>${esc(g.os)}</b></td><td>${esc(g.cliente)}</td><td>${g.total}</td><td>${g.rec}</td><td>${g.ens}</td><td>${Math.max(0,g.rec-g.ens)}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar-track" style="width:100px"><div class="bar-fill" style="width:${pct}%"></div></div><b>${pct}%</b></div></td></tr>`}).join('');}
 function pendingFor(s){if(s.recebidaSond&&!s.dataChegada)return 'Recebida Sond sem baixa São Pedro';if(!s.contrato)return 'OS sem contrato';if(!s.baseLogistica)return 'Sem base';if(['NA_BASE','AGUARDANDO_FRETE'].includes(s.statusLogistico))return 'Aguardando frete';if(s.statusLogistico==='CHEGOU_SAO_PEDRO'&&!s.recebidaSond)return 'Chegou e não recebido na Sond';if(s.statusLogistico==='RECEBIDA')return 'Recebida e aguardando ensaio';return''}
