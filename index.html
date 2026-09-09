@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gestão de Amostras — Sond V10.6</title>
+<title>Gestão de Amostras — Sond V10.8</title>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('sond_gestao_theme')||'light'}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
@@ -70,7 +70,7 @@ html[data-theme="dark"] .base-card.warning{background:#292514}html[data-theme="d
     <button data-section="pendencias">⚠ Pendências</button>
     <button data-section="importar">⇧ Importar Dados</button>
   </nav>
-  <div class="side-note"><b>Versão local V10.6</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
+  <div class="side-note"><b>Versão local V10.8</b><br>Os dados desta versão ficam salvos neste navegador. A próxima etapa será conectar ao Supabase para compartilhamento entre usuários.</div>
 </aside>
 <main class="main">
 <header class="topbar">
@@ -108,7 +108,7 @@ html[data-theme="dark"] .base-card.warning{background:#292514}html[data-theme="d
 </div>
 <section class="section active" id="section-overview">
   <div class="kpis" id="kpis"></div>
-  <div class="panel" style="margin-bottom:14px"><h4>Resumo operacional</h4><div class="panel-sub">Campo físico e confirmações principais. Fretes ficam concentrados na aba própria para reduzir poluição visual.</div><div class="flow" id="flow"></div><div class="notice" style="margin-top:10px"><b>Regra do campo:</b> quando houver filtro por data de coleta, somente uma baixa de São Pedro vinculada àquela mesma data reduz o indicador “Amostras em campo”.</div></div>
+  <div class="panel" style="margin-bottom:14px"><h4>Resumo operacional</h4><div class="panel-sub">Campo físico e confirmações principais. Fretes ficam concentrados na aba própria para reduzir poluição visual.</div><div class="flow" id="flow"></div><div class="notice" style="margin-top:10px"><b>Regra única do campo:</b> Visão Geral, Bases, Pulmão e PDF usam a mesma lista de Códigos Amostra. Uma amostra sai de “Em campo” quando é conciliada na sede por baixa manual ou pela Sond. Quando as duas confirmações representam a mesma chegada, ela é contada apenas uma vez.</div></div>
   <div class="grid-2"><div class="panel"><h4>Amostras por cliente</h4><div class="panel-sub">Base filtrada</div><div class="bars" id="chartClient"></div></div><div class="panel"><h4>Coletas por sondador</h4><div class="panel-sub">Quantidade de amostras</div><div class="bars" id="chartCollector"></div></div></div>
   <div class="team-chart-grid">
     <div class="panel">
@@ -167,10 +167,10 @@ html[data-theme="dark"] .base-card.warning{background:#292514}html[data-theme="d
     </div>
   </div>
   <div class="base-analytics-grid">
-    <div class="panel"><div class="panel-title-row"><div><h4>Estoque em campo por base</h4><div class="panel-sub">Clique em uma base para filtrar todo o dashboard.</div></div><span class="badge yellow">Campo = coletadas − baixas do mesmo lote/data</span></div><div class="base-board" id="baseCards"></div></div>
+    <div class="panel"><div class="panel-title-row"><div><h4>Estoque em campo por base</h4><div class="panel-sub">Clique em uma base para filtrar todo o dashboard.</div></div><span class="badge yellow">Mesma regra da Visão Geral e do Pulmão</span></div><div class="base-board" id="baseCards"></div></div>
     <div class="panel"><h4>Distribuição do estoque de campo</h4><div class="panel-sub">Comparação visual entre as bases atualmente cadastradas.</div><div class="chart-canvas-wrap compact"><canvas id="chartBases"></canvas></div></div>
   </div>
-  <div class="panel" style="margin-bottom:14px"><h4>Resumo operacional das bases</h4><div class="panel-sub">Priorize bases com maior estoque e maior tempo desde a coleta mais antiga.</div><div class="table-wrap"><table class="table"><thead><tr><th>Base</th><th>Em campo</th><th>Coletadas</th><th>Baixa São Pedro</th><th>OS</th><th>Contratos/SUP</th><th>Coleta mais antiga</th><th>Dias em aberto</th></tr></thead><tbody id="baseSummaryRows"></tbody></table></div></div>
+  <div class="panel" style="margin-bottom:14px"><h4>Resumo operacional das bases</h4><div class="panel-sub">Priorize bases com maior estoque e maior tempo desde a coleta mais antiga.</div><div class="table-wrap"><table class="table"><thead><tr><th>Base</th><th>Em campo</th><th>Coletadas</th><th>Na sede (conciliado)</th><th>OS</th><th>Contratos/SUP</th><th>Coleta mais antiga</th><th>Dias em aberto</th></tr></thead><tbody id="baseSummaryRows"></tbody></table></div></div>
   <div class="panel"><h4>Vinculação operacional</h4><div class="panel-sub">Cadastre ou ajuste OS → Contrato/SUP → Base. O vínculo é reaproveitado nas próximas importações.</div><div class="form-grid"><div class="field"><label>OS</label><select id="mapOS"></select></div><div class="field"><label>Contrato / SUP</label><input id="mapContract" placeholder="SUP-0000-00" /></div><div class="field"><label>Base</label><input id="mapBase" placeholder="Ex.: Sorocaba" list="basesList" /></div><div class="form-actions"><button class="btn primary" id="saveMapping">Salvar vínculo</button></div></div><datalist id="basesList"></datalist><div style="height:14px"></div><div class="table-wrap"><table class="table"><thead><tr><th>OS</th><th>Contrato/SUP</th><th>Base</th><th>Amostras</th><th></th></tr></thead><tbody id="mappingRows"></tbody></table></div></div>
 </section>
 <section class="section" id="section-fretes">
@@ -215,15 +215,15 @@ html[data-theme="dark"] .base-card.warning{background:#292514}html[data-theme="d
       <div class="conv-rule"><b>2. Exemplo de sacos duplos</b>10 sacos em 5 grupos de mesmo furo/profundidade = <b>5 Caracterizações + 10 Compactações</b>.</div>
       <div class="conv-rule"><b>3. Mais de 5 sacos no mesmo grupo</b>O grupo é marcado como <b>Dosagem futura</b> e contabiliza somente <b>1 Caracterização + 1 Compactação</b>.</div>
     </div>
-    <div class="notice"><b>Campo físico:</b> o pulmão exclui amostras recebidas na Sond e também as quantidades já baixadas manualmente em São Pedro. Como a baixa manual é por quantidade e não por Código Amostra, quando ela excede as recebidas identificadas pela Sond a retirada do lote é estimada de forma determinística. Use o <b>✏️ lápis do contrato</b> para corrigir Caracterização/Compactação quando necessário.<br><b>PDF gerencial:</b> o botão <b>Gerar PDF</b> cria um resumo no modelo de pulmão com somente dois focos: <b>amostras em campo (coletadas)</b> e <b>recebidas / São Pedro</b>. Não inclui “amostras a coletar”.</div>
+    <div class="notice" style="margin-bottom:10px"><b>Importante:</b> Caracterização e Compactação são cargas de ensaio independentes e <b>não devem ser somadas</b>. Uma mesma amostra física pode gerar os dois ensaios.</div><div class="notice"><b>Campo físico:</b> o pulmão exclui amostras recebidas na Sond e também as quantidades já baixadas manualmente em São Pedro. Como a baixa manual é por quantidade e não por Código Amostra, quando ela excede as recebidas identificadas pela Sond a retirada do lote é estimada de forma determinística. Use o <b>✏️ lápis do contrato</b> para corrigir Caracterização/Compactação quando necessário.<br><b>PDF gerencial:</b> o botão <b>Gerar PDF</b> cria um resumo no modelo de pulmão com somente dois focos: <b>amostras em campo (coletadas)</b> e <b>recebidas / São Pedro</b>. Não inclui “amostras a coletar”.</div>
   </div>
   <div class="panel" style="margin-bottom:14px">
     <div class="conv-toolbar"><div><h4 style="margin:0">Planejamento por Contrato / SUP</h4><div class="panel-sub" style="margin:4px 0 0">Clique no lápis para informar manualmente quantas Caracterizações e Compactações aquele contrato vai gerar no campo atual.</div></div><div class="legend"><span class="badge green">Automático</span><span class="badge yellow">✏️ Manual</span></div></div>
-    <div class="table-wrap"><table class="table"><thead><tr><th>Contrato / SUP</th><th>OS</th><th>Amostras em campo</th><th>Caract. auto</th><th>Compact. auto</th><th>Caract. planejada</th><th>Compact. planejada</th><th>Total</th><th>Fonte</th><th></th></tr></thead><tbody id="convContractRows"></tbody></table></div>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Contrato / SUP</th><th>OS</th><th>Amostras em campo</th><th>Caract. auto</th><th>Compact. auto</th><th>Caract. planejada</th><th>Compact. planejada</th><th>Fonte</th><th></th></tr></thead><tbody id="convContractRows"></tbody></table></div>
   </div>
   <div class="panel">
     <div class="conv-toolbar"><div><h4 style="margin:0">Detalhamento por OS / lote de coleta</h4><div class="panel-sub" style="margin:4px 0 0">Mostra como a sugestão automática foi formada somente com as amostras que permanecem em campo.</div></div><div class="legend"><span class="badge green">Automático</span><span class="badge yellow">Manual do lote</span><span class="badge orange">Dosagem futura</span></div></div>
-    <div class="table-wrap"><table class="table"><thead><tr><th>Data coleta</th><th>Contrato / SUP</th><th>OS</th><th>Cliente</th><th>Em campo</th><th>Grupos</th><th>Dosagem futura</th><th>Caract. auto</th><th>Compact. auto</th><th>Caract. planejada</th><th>Compact. planejada</th><th>Total</th><th></th></tr></thead><tbody id="convRows"></tbody></table></div>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Data coleta</th><th>Contrato / SUP</th><th>OS</th><th>Cliente</th><th>Em campo</th><th>Grupos</th><th>Dosagem futura</th><th>Caract. auto</th><th>Compact. auto</th><th>Caract. planejada</th><th>Compact. planejada</th><th></th></tr></thead><tbody id="convRows"></tbody></table></div>
   </div>
 </section>
 <section class="section" id="section-ensaiados"><div class="section-head"><div><h3>Ensaiados</h3><p>Progresso por OS com base nos status registrados.</p></div></div><div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>OS</th><th>Cliente</th><th>Coletadas</th><th>Recebidas</th><th>Ensaiadas</th><th>Pendentes</th><th>% concluído</th></tr></thead><tbody id="assayedRows"></tbody></table></div></div></section>
@@ -317,22 +317,23 @@ function manualSaoPedroForSamples(samples){
   if(!hasActiveAnalyticalFilters()) total+=entries.filter(e=>!e.dataColetaRef&&osSet.has(e.os)).reduce((a,e)=>a+(Number(e.quantidade)||0),0);
   return total;
 }
+function fieldSamplesForScope(samples){
+  const rows=samples||[];
+  if(!rows.length)return [];
+  // FONTE ÚNICA DO INDICADOR "EM CAMPO":
+  // 1) começa com todos os códigos coletados;
+  // 2) retira códigos confirmados no Excel de Recebidas da Sond;
+  // 3) a baixa manual só completa a quantidade que ainda não foi confirmada pela Sond;
+  // 4) nunca soma manual + Sond duas vezes para a mesma amostra.
+  const fieldCodes=new Set(conventionalFieldSamplesAll().map(s=>normCode(s.codigo)));
+  return rows.filter(s=>fieldCodes.has(normCode(s.codigo)));
+}
 function fieldInventoryForSamples(samples){
-  const rows=samples||[]; if(!rows.length)return 0;
-  const byBucket={}; rows.forEach(s=>{const k=sampleBucketKey(s);byBucket[k]=(byBucket[k]||0)+1;});
-  const entries=state.saoPedroEntradas||[];
-  let total=0;
-  for(const [k,n] of Object.entries(byBucket)){
-    const [os,dateRef]=k.split('|||');
-    const fullN=state.samples.filter(s=>s.os===os&&isoFromBR(s.dataColeta)===dateRef).length;
-    const baixas=n===fullN?entries.filter(e=>e.os===os&&e.dataColetaRef===dateRef).reduce((a,e)=>a+(Number(e.quantidade)||0),0):0;
-    total+=Math.max(0,n-baixas);
-  }
-  if(!hasActiveAnalyticalFilters()){
-    const legacyByOS={};entries.filter(e=>!e.dataColetaRef).forEach(e=>{legacyByOS[e.os]=(legacyByOS[e.os]||0)+(Number(e.quantidade)||0)});
-    for(const qtd of Object.values(legacyByOS)) total=Math.max(0,total-qtd);
-  }
-  return total;
+  return fieldSamplesForScope(samples).length;
+}
+function reconciledSedeForSamples(samples){
+  const rows=samples||[];
+  return Math.max(0,rows.length-fieldInventoryForSamples(rows));
 }
 function oldestCollectionISO(samples){const ds=(samples||[]).map(s=>isoFromBR(s.dataColeta)).filter(Boolean).sort();return ds[0]||'';}
 function daysSinceISO(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00'),now=new Date();now.setHours(0,0,0,0);return Math.max(0,Math.floor((now-d)/86400000));}
@@ -391,24 +392,24 @@ function renderOverview(){
   const latestCount=ss.filter(x=>isoFromBR(x.dataColeta)===latest).length;
   const stCount=new Set(ss.map(x=>`${x.os}|${x.identificacao}`)).size;
   const osCount=new Set(ss.map(x=>x.os)).size;
-  const manualSP=manualSaoPedroForSamples(ss);
   const emCampo=fieldInventoryForSamples(ss);
+  const naSede=reconciledSedeForSamples(ss);
   const recebidasSond=ss.filter(x=>x.recebidaSond).length;
   const ensaiadas=ss.filter(x=>x.statusLogistico==='ENSAIADA').length;
   const dateFiltered=!!getFilterValues().dt;
-  const fieldFoot=dateFiltered?'coletas da data − baixas do mesmo lote/data':'estoque físico do histórico − baixas São Pedro';
+  const fieldFoot=dateFiltered?'mesma regra do Pulmão • somente o que permanece fora da sede':'fonte única • manual e Sond conciliados sem duplicidade';
   const vals=[
     ['Amostras em campo',emCampo,fieldFoot,'field-kpi'],
     ['Coletadas na última data',latestCount,latest?brDate(latest):'Sem data','yellow'],
-    ['São Pedro (manual)',manualSP,dateFiltered?'baixas vinculadas à data filtrada':'quantidade física lançada',''],
-    ['Recebidas Sond',recebidasSond,'confirmadas pelo Excel de recebidas',''],
+    ['Na sede (conciliado)',naSede,'baixa manual ou Recebida Sond, sem somar duas vezes',''],
+    ['Recebidas Sond',recebidasSond,'confirmações individuais pelo Excel de recebidas',''],
     ['ST distintos',stCount,'OS + Identificação',''],
     ['Ordens de Serviço',osCount,'no filtro atual','']
   ];
   document.getElementById('kpis').innerHTML=vals.map(v=>`<div class="kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
   document.getElementById('flow').innerHTML=[
     ['Em campo',emCampo],
-    ['São Pedro',manualSP],
+    ['Na sede',naSede],
     ['Recebidas Sond',recebidasSond],
     ['Ensaiadas',ensaiadas]
   ].map(([label,n])=>`<div class="flow-step"><div class="n">${n}</div><div class="t">${label}</div></div>`).join('');
@@ -441,11 +442,11 @@ function renderBases(){
   const ss=filtered(),facet=filterSamples('fBase');
   const selected=document.getElementById('fBase')?.value||'';
   const grouped={};facet.forEach(x=>{const b=x.baseLogistica||'SEM BASE';(grouped[b]||(grouped[b]=[])).push(x)});
-  const metrics=Object.entries(grouped).map(([base,rows])=>{const osSet=new Set(rows.map(x=>x.os)),collected=rows.length,sp=manualSaoPedroForSamples(rows),field=fieldInventoryForSamples(rows),contracts=new Set(rows.map(x=>x.contrato).filter(Boolean)).size,oldest=oldestCollectionISO(rows),days=daysSinceISO(oldest);return {base,rows,collected,sp,field,os:osSet.size,contracts,oldest,days};}).sort((a,b)=>b.field-a.field||b.collected-a.collected);
-  const totalField=fieldInventoryForSamples(ss),totalSP=manualSaoPedroForSamples(ss),oss=uniq(ss.map(x=>x.os)),contracts=new Set(ss.map(x=>x.contrato).filter(Boolean)).size,bases=new Set(ss.map(x=>x.baseLogistica).filter(Boolean)).size,withoutBase=fieldInventoryForSamples(ss.filter(x=>!x.baseLogistica));
-  document.getElementById('baseViewSummary').innerHTML=`<span class="metric-pill"><b>${totalField}</b> em campo</span><span class="metric-pill"><b>${totalSP}</b> baixadas São Pedro</span><span class="metric-pill"><b>${oss.length}</b> OS</span><span class="metric-pill"><b>${contracts}</b> contratos/SUP</span><span class="metric-pill"><b>${bases}</b> bases</span><span class="metric-pill"><b>${withoutBase}</b> em campo sem base</span>`;
+  const metrics=Object.entries(grouped).map(([base,rows])=>{const osSet=new Set(rows.map(x=>x.os)),collected=rows.length,sp=reconciledSedeForSamples(rows),field=fieldInventoryForSamples(rows),contracts=new Set(rows.map(x=>x.contrato).filter(Boolean)).size,oldest=oldestCollectionISO(rows),days=daysSinceISO(oldest);return {base,rows,collected,sp,field,os:osSet.size,contracts,oldest,days};}).sort((a,b)=>b.field-a.field||b.collected-a.collected);
+  const totalField=fieldInventoryForSamples(ss),totalSP=reconciledSedeForSamples(ss),oss=uniq(ss.map(x=>x.os)),contracts=new Set(ss.map(x=>x.contrato).filter(Boolean)).size,bases=new Set(ss.map(x=>x.baseLogistica).filter(Boolean)).size,withoutBase=fieldInventoryForSamples(ss.filter(x=>!x.baseLogistica));
+  document.getElementById('baseViewSummary').innerHTML=`<span class="metric-pill"><b>${totalField}</b> em campo</span><span class="metric-pill"><b>${totalSP}</b> na sede (conciliado)</span><span class="metric-pill"><b>${oss.length}</b> OS</span><span class="metric-pill"><b>${contracts}</b> contratos/SUP</span><span class="metric-pill"><b>${bases}</b> bases</span><span class="metric-pill"><b>${withoutBase}</b> em campo sem base</span>`;
   const maxField=Math.max(1,...metrics.map(m=>m.field));
-  document.getElementById('baseCards').innerHTML=metrics.length?metrics.map(m=>{const val=m.base==='SEM BASE'?'__SEM_BASE__':m.base,active=selected===val,pct=Math.round(m.field/maxField*100);return `<div class="base-card-v9 ${m.base==='SEM BASE'?'warning':''} ${active?'active':''}" onclick="filterBaseCard('${escAttr(val)}')"><div class="base-top"><h5>${esc(m.base)}</h5>${m.days!==null&&m.days>=5?`<span class="badge orange">${m.days} dias</span>`:''}</div><div class="base-field-value">${m.field}</div><div class="base-field-label">amostras em campo</div><div class="base-progress"><span style="width:${pct}%"></span></div><div class="base-meta"><span>Coletadas <b>${m.collected}</b></span><span>São Pedro <b>${Math.min(m.sp,m.collected)}</b></span><span>OS <b>${m.os}</b></span><span>SUPs <b>${m.contracts}</b></span></div></div>`}).join(''):'<div class="filter-empty-hint" style="grid-column:1/-1">Nenhuma base encontrada com os filtros atuais. <button class="btn" onclick="clearAllFilters()">Limpar filtros</button></div>';
+  document.getElementById('baseCards').innerHTML=metrics.length?metrics.map(m=>{const val=m.base==='SEM BASE'?'__SEM_BASE__':m.base,active=selected===val,pct=Math.round(m.field/maxField*100);return `<div class="base-card-v9 ${m.base==='SEM BASE'?'warning':''} ${active?'active':''}" onclick="filterBaseCard('${escAttr(val)}')"><div class="base-top"><h5>${esc(m.base)}</h5>${m.days!==null&&m.days>=5?`<span class="badge orange">${m.days} dias</span>`:''}</div><div class="base-field-value">${m.field}</div><div class="base-field-label">amostras em campo</div><div class="base-progress"><span style="width:${pct}%"></span></div><div class="base-meta"><span>Coletadas <b>${m.collected}</b></span><span>Na sede <b>${Math.min(m.sp,m.collected)}</b></span><span>OS <b>${m.os}</b></span><span>SUPs <b>${m.contracts}</b></span></div></div>`}).join(''):'<div class="filter-empty-hint" style="grid-column:1/-1">Nenhuma base encontrada com os filtros atuais. <button class="btn" onclick="clearAllFilters()">Limpar filtros</button></div>';
   const summary=document.getElementById('baseSummaryRows');if(summary)summary.innerHTML=metrics.length?metrics.map(m=>`<tr onclick="filterBaseCard('${escAttr(m.base==='SEM BASE'?'__SEM_BASE__':m.base)}')" style="cursor:pointer"><td><b>${esc(m.base)}</b></td><td><b>${m.field}</b></td><td>${m.collected}</td><td>${Math.min(m.sp,m.collected)}</td><td>${m.os}</td><td>${m.contracts}</td><td>${m.oldest?brDate(m.oldest):'—'}</td><td>${m.days===null?'—':m.days}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sem dados para as bases.</td></tr>';
   const mapRowsOS=uniq(ss.map(x=>x.os));document.getElementById('mappingRows').innerHTML=mapRowsOS.length?mapRowsOS.map(os=>{const mp=state.mappings[os]||{},n=ss.filter(x=>x.os===os).length;return `<tr><td><b>${esc(os)}</b></td><td>${mp.contrato?`<b>${esc(mp.contrato)}</b>`:'<span class="muted">Não vinculado</span>'}</td><td>${mp.base?`<span class="badge green">${esc(mp.base)}</span>`:'<span class="badge orange">Sem base</span>'}</td><td><b>${n}</b></td><td><button class="link-btn" onclick="editMapping('${escAttr(os)}')">Editar</button>${(mp.contrato||mp.base)?` &nbsp; <button class="link-btn" onclick="removeMapping('${escAttr(os)}')">Excluir</button>`:''}</td></tr>`}).join(''):'<tr><td colspan="5" class="empty">Nenhuma OS corresponde aos filtros atuais.</td></tr>';
   renderBaseChart(metrics);
@@ -536,8 +537,7 @@ function conventionalFieldSamplesAll(){
   return rows.filter(s=>!removed.has(normCode(s.codigo)));
 }
 function conventionalFieldFiltered(){
-  const fieldCodes=new Set(conventionalFieldSamplesAll().map(s=>normCode(s.codigo)));
-  return filtered().filter(s=>fieldCodes.has(normCode(s.codigo)));
+  return fieldSamplesForScope(filtered());
 }
 function conventionalBatches(){
   const ss=conventionalFieldFiltered(),by={};
@@ -552,11 +552,11 @@ function conventionalContractSummaries(){
 }
 function renderConventional(){
   const rows=conventionalBatches(),contracts=conventionalContractSummaries();
-  const totalSamples=contracts.reduce((a,r)=>a+r.samples,0),totalChar=contracts.reduce((a,r)=>a+r.finalChar,0),totalComp=contracts.reduce((a,r)=>a+r.finalComp,0),totalDosage=contracts.reduce((a,r)=>a+r.dosageGroups,0),total=totalChar+totalComp;
-  const k=document.getElementById('convKpis');if(k)k.innerHTML=[['Amostras em campo',totalSamples,'exclui São Pedro / recebidas Sond','yellow'],['Caracterizações previstas',totalChar,'automático ou manual',''],['Compactações previstas',totalComp,'automático ou manual',''],['Total convencionais',total,'caracterização + compactação',''],['Grupos de dosagem futura',totalDosage,'mais de 5 sacos no mesmo furo/profundidade',totalDosage?'yellow':'']].map(v=>`<div class="conv-kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
-  const cb=document.getElementById('convContractRows');if(cb)cb.innerHTML=contracts.length?contracts.map(g=>{const source=g.manualContract?'Manual contrato':g.manualBatch?'Manual lote + auto':'Automático';return `<tr><td><b>${esc(g.label)}</b></td><td>${g.osList.map(x=>`<span class="badge gray">${esc(x)}</span>`).join(' ')}</td><td><b>${g.samples}</b></td><td>${g.autoChar}</td><td>${g.autoComp}</td><td><b>${g.finalChar}</b></td><td><b>${g.finalComp}</b></td><td><span class="conv-total">${g.finalChar+g.finalComp}</span></td><td><span class="badge ${g.manualContract?'yellow':g.manualBatch?'orange':'green'}">${source}</span></td><td><button class="btn" style="padding:7px 10px" onclick="openContractConventionalPlan('${escAttr(g.key)}')" title="Editar quantidade manual">✏️</button></td></tr>`;}).join(''):'<tr><td colspan="10" class="empty">Nenhuma amostra em campo corresponde aos filtros atuais.</td></tr>';
+  const totalSamples=fieldInventoryForSamples(filtered()),totalChar=contracts.reduce((a,r)=>a+r.finalChar,0),totalComp=contracts.reduce((a,r)=>a+r.finalComp,0),totalDosage=contracts.reduce((a,r)=>a+r.dosageGroups,0);
+  const k=document.getElementById('convKpis');if(k)k.innerHTML=[['Amostras em campo',totalSamples,'estoque físico único','yellow'],['Caracterizações previstas',totalChar,'carga prevista • pode usar a mesma amostra da compactação',''],['Compactações previstas',totalComp,'carga prevista • pode usar a mesma amostra da caracterização',''],['Grupos de dosagem futura',totalDosage,'mais de 5 sacos no mesmo furo/profundidade',totalDosage?'yellow':'']].map(v=>`<div class="conv-kpi ${v[3]||''}"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="foot">${v[2]}</div></div>`).join('');
+  const cb=document.getElementById('convContractRows');if(cb)cb.innerHTML=contracts.length?contracts.map(g=>{const source=g.manualContract?'Manual contrato':g.manualBatch?'Manual lote + auto':'Automático';return `<tr><td><b>${esc(g.label)}</b></td><td>${g.osList.map(x=>`<span class="badge gray">${esc(x)}</span>`).join(' ')}</td><td><b>${g.samples}</b></td><td>${g.autoChar}</td><td>${g.autoComp}</td><td><b>${g.finalChar}</b></td><td><b>${g.finalComp}</b></td><td><span class="badge ${g.manualContract?'yellow':g.manualBatch?'orange':'green'}">${source}</span></td><td><button class="btn" style="padding:7px 10px" onclick="openContractConventionalPlan('${escAttr(g.key)}')" title="Editar quantidade manual">✏️</button></td></tr>`;}).join(''):'<tr><td colspan="9" class="empty">Nenhuma amostra em campo corresponde aos filtros atuais.</td></tr>';
   const body=document.getElementById('convRows');if(!body)return;
-  body.innerHTML=rows.length?rows.map(r=>{const id=convDomKey(r.os,r.date);const p=r.plan||{};const charVal=(p.caracterizacao===null||p.caracterizacao===undefined)?'':p.caracterizacao;const compVal=(p.compactacao===null||p.compactacao===undefined)?'':p.compactacao;return `<tr><td>${brDate(r.date)}</td><td>${esc(r.contrato||'<sem SUP>').replace('&lt;sem SUP&gt;','<span class="badge gray">Sem SUP</span>')}</td><td><b>${esc(r.os)}</b></td><td>${esc(r.cliente||'—')}</td><td><b>${r.samples.length}</b></td><td>${r.groups.length}</td><td>${r.dosageGroups?`<span class="badge orange">${r.dosageGroups}</span>`:'0'}</td><td><b>${r.autoChar}</b></td><td><b>${r.autoComp}</b></td><td><input class="conv-input ${charVal!==''?'manual':''}" id="conv-char-${id}" type="number" min="0" step="1" value="${esc(charVal)}" placeholder="${r.autoChar}" onchange="saveConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')"><span class="conv-source">${charVal!==''?'Manual':'Auto'}</span></td><td><input class="conv-input ${compVal!==''?'manual':''}" id="conv-comp-${id}" type="number" min="0" step="1" value="${esc(compVal)}" placeholder="${r.autoComp}" onchange="saveConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')"><span class="conv-source">${compVal!==''?'Manual':'Auto'}</span></td><td><span class="conv-total">${r.finalChar+r.finalComp}</span></td><td><div style="display:flex;gap:8px"><button class="link-btn" onclick="openConventionalDetails('${escAttr(r.os)}','${escAttr(r.date)}')">Detalhes</button>${r.manual?`<button class="link-btn" onclick="resetConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')">Usar auto</button>`:''}</div></td></tr>`;}).join(''):'<tr><td colspan="13" class="empty">Nenhuma amostra em campo corresponde aos filtros atuais.</td></tr>';
+  body.innerHTML=rows.length?rows.map(r=>{const id=convDomKey(r.os,r.date);const p=r.plan||{};const charVal=(p.caracterizacao===null||p.caracterizacao===undefined)?'':p.caracterizacao;const compVal=(p.compactacao===null||p.compactacao===undefined)?'':p.compactacao;return `<tr><td>${brDate(r.date)}</td><td>${esc(r.contrato||'<sem SUP>').replace('&lt;sem SUP&gt;','<span class="badge gray">Sem SUP</span>')}</td><td><b>${esc(r.os)}</b></td><td>${esc(r.cliente||'—')}</td><td><b>${r.samples.length}</b></td><td>${r.groups.length}</td><td>${r.dosageGroups?`<span class="badge orange">${r.dosageGroups}</span>`:'0'}</td><td><b>${r.autoChar}</b></td><td><b>${r.autoComp}</b></td><td><input class="conv-input ${charVal!==''?'manual':''}" id="conv-char-${id}" type="number" min="0" step="1" value="${esc(charVal)}" placeholder="${r.autoChar}" onchange="saveConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')"><span class="conv-source">${charVal!==''?'Manual':'Auto'}</span></td><td><input class="conv-input ${compVal!==''?'manual':''}" id="conv-comp-${id}" type="number" min="0" step="1" value="${esc(compVal)}" placeholder="${r.autoComp}" onchange="saveConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')"><span class="conv-source">${compVal!==''?'Manual':'Auto'}</span></td><td><div style="display:flex;gap:8px"><button class="link-btn" onclick="openConventionalDetails('${escAttr(r.os)}','${escAttr(r.date)}')">Detalhes</button>${r.manual?`<button class="link-btn" onclick="resetConventionalPlan('${escAttr(r.os)}','${escAttr(r.date)}')">Usar auto</button>`:''}</div></td></tr>`;}).join(''):'<tr><td colspan="12" class="empty">Nenhuma amostra em campo corresponde aos filtros atuais.</td></tr>';
 }
 function saveConventionalPlan(os,date){const id=convDomKey(os,date),charEl=document.getElementById(`conv-char-${id}`),compEl=document.getElementById(`conv-comp-${id}`);if(!charEl||!compEl)return;const cv=charEl.value.trim(),pv=compEl.value.trim();const c=cv===''?null:Math.max(0,Math.trunc(Number(cv)||0)),p=pv===''?null:Math.max(0,Math.trunc(Number(pv)||0));const key=convBatchKey(os,date);if(c===null&&p===null)delete state.conventionalPlans[key];else state.conventionalPlans[key]={caracterizacao:c,compactacao:p,updatedAt:new Date().toISOString()};save();toast('Planejamento convencional do lote salvo');}
 function resetConventionalPlan(os,date){delete state.conventionalPlans[convBatchKey(os,date)];save();toast('Contagem automática do lote restaurada');}
@@ -569,9 +569,9 @@ function openContractConventionalPlan(key){
 }
 function saveContractConventionalPlan(key){const cEl=document.getElementById('contractConvChar'),pEl=document.getElementById('contractConvComp');if(!cEl||!pEl)return;const cv=cEl.value.trim(),pv=pEl.value.trim();const c=cv===''?null:Math.max(0,Math.trunc(Number(cv)||0)),p=pv===''?null:Math.max(0,Math.trunc(Number(pv)||0));if(c===null&&p===null)delete state.conventionalContractPlans[key];else state.conventionalContractPlans[key]={caracterizacao:c,compactacao:p,updatedAt:new Date().toISOString()};save();hideModal('detailsModal');toast('Planejamento manual do contrato salvo');}
 function clearContractConventionalPlan(key){delete state.conventionalContractPlans[key];save();hideModal('detailsModal');toast('Planejamento do contrato voltou ao automático');}
-function openConventionalDetails(os,date){const row=conventionalBatches().find(r=>r.os===os&&(isoFromBR(r.date)||r.date)===(isoFromBR(date)||date));if(!row)return;document.getElementById('modalTitle').textContent=`Pulmão • ${os} • ${brDate(date)}`;const grp=row.groups.map(g=>`<tr><td><b>${esc(g.identificacao)}</b></td><td>${esc(g.topo??'—')} a ${esc(g.baseM??'—')} m</td><td><b>${g.count}</b></td><td>${g.dosage?'<span class="badge orange">Dosagem futura</span>':'<span class="badge green">Convencional</span>'}</td><td><b>${g.caracterizacao}</b></td><td><b>${g.compactacao}</b></td></tr>`).join('');document.getElementById('modalBody').innerHTML=`<div class="details-grid"><div class="detail"><small>Contrato/SUP</small>${esc(row.contrato||'Não vinculado')}</div><div class="detail"><small>Cliente</small>${esc(row.cliente||'—')}</div><div class="detail"><small>Amostras em campo</small>${row.samples.length}</div><div class="detail"><small>Grupos ST + profundidade</small>${row.groups.length}</div></div><div class="notice" style="margin-bottom:12px"><b>Previsão atual do lote:</b> ${row.finalChar} Caracterizações + ${row.finalComp} Compactações = <b>${row.finalChar+row.finalComp} ensaios</b>. ${row.manual?'Há ajuste manual neste lote.':'Contagem automática pelas regras cadastradas.'}</div><div class="table-wrap"><table class="table"><thead><tr><th>Furo / ST</th><th>Profundidade</th><th>Sacos em campo</th><th>Regra</th><th>Caracterização</th><th>Compactação</th></tr></thead><tbody>${grp}</tbody></table></div><div class="conv-detail-note">Regra: mais de 5 sacos no mesmo ST e mesma profundidade = 1 Caracterização + 1 Compactação, sinalizado como dosagem futura.</div>`;showModal('detailsModal');}
-function conventionalExportRows(){return conventionalBatches().map(r=>({'Data Coleta':brDate(r.date),'Contrato/SUP':r.contrato||'','OS':r.os,'Cliente':r.cliente,'Amostras em Campo':r.samples.length,'Grupos ST+Profundidade':r.groups.length,'Grupos Dosagem Futura':r.dosageGroups,'Caracterização Automática':r.autoChar,'Compactação Automática':r.autoComp,'Caracterização Planejada Lote':r.finalChar,'Compactação Planejada Lote':r.finalComp,'Total Lote':r.finalChar+r.finalComp,'Fonte Lote':r.manual?'Manual/Auto':'Automático'}));}
-function conventionalContractExportRows(){return conventionalContractSummaries().map(g=>({'Contrato/SUP':g.label,'OS':g.osList.join(', '),'Amostras em Campo':g.samples,'Caracterização Automática':g.autoChar,'Compactação Automática':g.autoComp,'Caracterização Planejada':g.finalChar,'Compactação Planejada':g.finalComp,'Total Planejado':g.finalChar+g.finalComp,'Fonte':g.manualContract?'Manual contrato':g.manualBatch?'Manual lote + auto':'Automático'}));}
+function openConventionalDetails(os,date){const row=conventionalBatches().find(r=>r.os===os&&(isoFromBR(r.date)||r.date)===(isoFromBR(date)||date));if(!row)return;document.getElementById('modalTitle').textContent=`Pulmão • ${os} • ${brDate(date)}`;const grp=row.groups.map(g=>`<tr><td><b>${esc(g.identificacao)}</b></td><td>${esc(g.topo??'—')} a ${esc(g.baseM??'—')} m</td><td><b>${g.count}</b></td><td>${g.dosage?'<span class="badge orange">Dosagem futura</span>':'<span class="badge green">Convencional</span>'}</td><td><b>${g.caracterizacao}</b></td><td><b>${g.compactacao}</b></td></tr>`).join('');document.getElementById('modalBody').innerHTML=`<div class="details-grid"><div class="detail"><small>Contrato/SUP</small>${esc(row.contrato||'Não vinculado')}</div><div class="detail"><small>Cliente</small>${esc(row.cliente||'—')}</div><div class="detail"><small>Amostras em campo</small>${row.samples.length}</div><div class="detail"><small>Grupos ST + profundidade</small>${row.groups.length}</div></div><div class="notice" style="margin-bottom:12px"><b>Previsão atual do lote:</b> ${row.finalChar} Caracterizações e ${row.finalComp} Compactações. <b>Não somar as duas previsões</b>, pois uma mesma amostra pode atender aos dois ensaios. ${row.manual?'Há ajuste manual neste lote.':'Contagem automática pelas regras cadastradas.'}</div><div class="table-wrap"><table class="table"><thead><tr><th>Furo / ST</th><th>Profundidade</th><th>Sacos em campo</th><th>Regra</th><th>Caracterização</th><th>Compactação</th></tr></thead><tbody>${grp}</tbody></table></div><div class="conv-detail-note">Regra: mais de 5 sacos no mesmo ST e mesma profundidade = 1 Caracterização + 1 Compactação, sinalizado como dosagem futura.</div>`;showModal('detailsModal');}
+function conventionalExportRows(){return conventionalBatches().map(r=>({'Data Coleta':brDate(r.date),'Contrato/SUP':r.contrato||'','OS':r.os,'Cliente':r.cliente,'Amostras em Campo':r.samples.length,'Grupos ST+Profundidade':r.groups.length,'Grupos Dosagem Futura':r.dosageGroups,'Caracterização Automática':r.autoChar,'Compactação Automática':r.autoComp,'Caracterização Planejada Lote':r.finalChar,'Compactação Planejada Lote':r.finalComp,'Fonte Lote':r.manual?'Manual/Auto':'Automático'}));}
+function conventionalContractExportRows(){return conventionalContractSummaries().map(g=>({'Contrato/SUP':g.label,'OS':g.osList.join(', '),'Amostras em Campo':g.samples,'Caracterização Automática':g.autoChar,'Compactação Automática':g.autoComp,'Caracterização Planejada':g.finalChar,'Compactação Planejada':g.finalComp,'Fonte':g.manualContract?'Manual contrato':g.manualBatch?'Manual lote + auto':'Automático'}));}
 function exportConventionalExcel(){const rows=conventionalExportRows(),contracts=conventionalContractExportRows();if(!rows.length){alert('Não há amostras em campo no filtro atual.');return;}const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(contracts),'Resumo_Contratos');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Detalhe_Lotes');XLSX.writeFile(wb,`pulmao-convencionais-${new Date().toISOString().slice(0,10)}.xlsx`);}
 
 function conventionalSedeFiltered(){
@@ -607,7 +607,6 @@ function generateConventionalPDF(){
   if(!current.length){alert('Não há amostras no filtro atual para gerar o PDF.');return;}
   const fieldContracts=conventionalContractSummaries();
   const field={amostras:fieldContracts.reduce((a,g)=>a+g.samples,0),caracterizacao:fieldContracts.reduce((a,g)=>a+g.finalChar,0),compactacao:fieldContracts.reduce((a,g)=>a+g.finalComp,0)};
-  field.total=field.caracterizacao+field.compactacao;
   const sede=conventionalAutoTotalsForSamples(conventionalSedeFiltered());
   const rows=conventionalPdfRows();
   const totalColetadas=current.length;
@@ -623,12 +622,12 @@ function generateConventionalPDF(){
   const header=(subtitle='Resumo gerencial')=>{setFill(C.dark);doc.rect(0,0,W,26,'F');setFill(C.yellow);doc.rect(0,25,W,1.3,'F');setText(C.white);doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text('PULMÃO DE CONVENCIONAIS',12,11);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(subtitle,12,18);setText(C.yellow);doc.setFont('helvetica','bold');doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`,W-12,11,{align:'right'});setText(C.white);doc.setFont('helvetica','normal');doc.setFontSize(7.5);const f=doc.splitTextToSize(conventionalPdfFilterText(),110);doc.text(f,W-12,17,{align:'right'});};
   const stat=(x,y,w,label,value,accent=C.yellow)=>{setFill(C.soft);setDraw(C.line);doc.roundedRect(x,y,w,18,2,2,'FD');setFill(accent);doc.rect(x,y,1.8,18,'F');setText(C.muted);doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.text(label.toUpperCase(),x+5,y+6);setText(C.ink);doc.setFontSize(15);doc.text(money(value),x+5,y+14);};
   const bigPanel=(x,y,w,h,title,subtitle,data,accent)=>{setFill(C.panel);setDraw(accent);doc.setLineWidth(.7);doc.roundedRect(x,y,w,h,4,4,'FD');setFill(accent);doc.roundedRect(x+5,y+5,w-10,12,2,2,'F');setText(C.dark);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(title,x+w/2,y+13,{align:'center'});setText(C.white);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(subtitle,x+w/2,y+23,{align:'center'});doc.setFont('helvetica','bold');doc.setFontSize(27);doc.text(money(data.amostras),x+w/2,y+38,{align:'center'});doc.setFontSize(7.5);doc.setFont('helvetica','normal');setText([195,201,209]);doc.text('AMOSTRAS FÍSICAS',x+w/2,y+44,{align:'center'});
-    const half=(w-16)/2;setFill([36,42,51]);doc.roundedRect(x+5,y+50,half,h-56,2.5,2.5,'F');doc.roundedRect(x+11+half,y+50,half,h-56,2.5,2.5,'F');setText(accent);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('PARA CARACTERIZAÇÃO',x+5+half/2,y+58,{align:'center'});doc.text('PARA COMPACTAÇÃO',x+11+half+half/2,y+58,{align:'center'});setText(C.white);doc.setFontSize(22);doc.text(money(data.caracterizacao),x+5+half/2,y+72,{align:'center'});doc.text(money(data.compactacao),x+11+half+half/2,y+72,{align:'center'});doc.setFontSize(7.5);setText([195,201,209]);doc.setFont('helvetica','normal');doc.text(`Total: ${money(data.total||((data.caracterizacao||0)+(data.compactacao||0)))} ensaios`,x+w/2,y+h-6,{align:'center'});};
+    const half=(w-16)/2;setFill([36,42,51]);doc.roundedRect(x+5,y+50,half,h-56,2.5,2.5,'F');doc.roundedRect(x+11+half,y+50,half,h-56,2.5,2.5,'F');setText(accent);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('PARA CARACTERIZAÇÃO',x+5+half/2,y+58,{align:'center'});doc.text('PARA COMPACTAÇÃO',x+11+half+half/2,y+58,{align:'center'});setText(C.white);doc.setFontSize(22);doc.text(money(data.caracterizacao),x+5+half/2,y+72,{align:'center'});doc.text(money(data.compactacao),x+11+half+half/2,y+72,{align:'center'});doc.setFontSize(7.2);setText([195,201,209]);doc.setFont('helvetica','normal');doc.text('Indicadores independentes • não somar',x+w/2,y+h-6,{align:'center'});};
 
   header('Resumo das amostras já coletadas: campo x recebidas / São Pedro');
   const sy=34,sw=52,gap=3.5;
   stat(12,sy,sw,'Total coletadas',totalColetadas,C.blue);stat(12+sw+gap,sy,sw,'OS no recorte',uniqueOS,C.yellow);stat(12+(sw+gap)*2,sy,sw,'Contratos/SUP',uniqueContracts,C.yellow);stat(12+(sw+gap)*3,sy,sw,'Em campo',field.amostras,C.yellow);stat(12+(sw+gap)*4,sy,sw,'Na sede / recebidas',sede.amostras,C.green);
-  bigPanel(12,58,132,104,'AMOSTRAS EM CAMPO','COLETADAS • AINDA NÃO CONFIRMADAS NA SEDE',{...field,total:field.total},C.yellow);
+  bigPanel(12,58,132,104,'AMOSTRAS EM CAMPO','COLETADAS • AINDA NÃO CONFIRMADAS NA SEDE',field,C.yellow);
   bigPanel(153,58,132,104,'RECEBIDAS / SÃO PEDRO','BAIXA MANUAL OU RECEBIDA NA SOND • SEM DUPLICAR',sede,C.green);
   setText(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text('Observação: nas baixas manuais sem identificação por Código Amostra, a distribuição por ST/profundidade é estimada pelo sistema. Ajustes manuais do Pulmão prevalecem para o estoque em campo.',12,171);
 
@@ -638,10 +637,10 @@ function generateConventionalPDF(){
   if(rows.length){
     for(let page=0;page<totalTablePages;page++){
       doc.addPage('a4','landscape');header('Detalhamento por Contrato / SUP');
-      const cols=[{t:'Contrato / SUP',w:58},{t:'OS',w:45},{t:'Campo',w:20},{t:'Caract. campo',w:23},{t:'Compact. campo',w:25},{t:'Sede',w:20},{t:'Caract. sede',w:23},{t:'Compact. sede',w:25},{t:'Total ensaios',w:25}];
+      const cols=[{t:'Contrato / SUP',w:58},{t:'OS',w:45},{t:'Campo',w:20},{t:'Caract. campo',w:23},{t:'Compact. campo',w:25},{t:'Sede',w:20},{t:'Caract. sede',w:23},{t:'Compact. sede',w:25}];
       let x=12,y=34;setFill(C.dark);doc.rect(12,y,cols.reduce((a,c)=>a+c.w,0),9,'F');setText(C.white);doc.setFont('helvetica','bold');doc.setFontSize(7.2);cols.forEach(c=>{doc.text(c.t,x+2,y+5.8);x+=c.w;});y+=9;
       const slice=rows.slice(page*perPage,(page+1)*perPage);
-      slice.forEach((r,i)=>{const vals=[r.label,r.osList.join(', '),r.campo,r.carCampo,r.compCampo,r.sede,r.carSede,r.compSede,r.carCampo+r.compCampo+r.carSede+r.compSede];x=12;setFill(i%2?C.white:C.soft);doc.rect(12,y,cols.reduce((a,c)=>a+c.w,0),8,'F');setDraw(C.line);doc.line(12,y+8,12+cols.reduce((a,c)=>a+c.w,0),y+8);doc.setFont('helvetica',i===0?'bold':'normal');doc.setFontSize(7);setText(C.ink);vals.forEach((v,idx)=>{const c=cols[idx];if(idx<2){const txt=doc.splitTextToSize(String(v??'—'),c.w-4)[0]||'—';doc.text(txt,x+2,y+5.2);}else{doc.text(money(v),x+c.w-2,y+5.2,{align:'right'});}x+=c.w;});y+=8;});
+      slice.forEach((r,i)=>{const vals=[r.label,r.osList.join(', '),r.campo,r.carCampo,r.compCampo,r.sede,r.carSede,r.compSede];x=12;setFill(i%2?C.white:C.soft);doc.rect(12,y,cols.reduce((a,c)=>a+c.w,0),8,'F');setDraw(C.line);doc.line(12,y+8,12+cols.reduce((a,c)=>a+c.w,0),y+8);doc.setFont('helvetica',i===0?'bold':'normal');doc.setFontSize(7);setText(C.ink);vals.forEach((v,idx)=>{const c=cols[idx];if(idx<2){const txt=doc.splitTextToSize(String(v??'—'),c.w-4)[0]||'—';doc.text(txt,x+2,y+5.2);}else{doc.text(money(v),x+c.w-2,y+5.2,{align:'right'});}x+=c.w;});y+=8;});
       const pageRows=slice;const totals=pageRows.reduce((a,r)=>({campo:a.campo+r.campo,carCampo:a.carCampo+r.carCampo,compCampo:a.compCampo+r.compCampo,sede:a.sede+r.sede,carSede:a.carSede+r.carSede,compSede:a.compSede+r.compSede}),{campo:0,carCampo:0,compCampo:0,sede:0,carSede:0,compSede:0});
       y+=4;setFill([255,249,218]);setDraw(C.yellow);doc.roundedRect(12,y,273,13,2,2,'FD');setText(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text(`Página: Campo ${money(totals.campo)} amostras • ${money(totals.carCampo)} caracterizações • ${money(totals.compCampo)} compactações`,17,y+5.2);doc.text(`Sede ${money(totals.sede)} amostras • ${money(totals.carSede)} caracterizações • ${money(totals.compSede)} compactações`,17,y+10);
       footer(page+2,totalPages);
